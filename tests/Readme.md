@@ -1,145 +1,46 @@
-# Working with DEX core smart-contracts
+get_contracts.sh
+get_network.sh
+get_tonos_cli.sh
+get_tvm_linker.sh
 
-## 1. Introduction
+sudo tondev se start
 
-You can use the TONOS-CLI utility to deploy contract DEXclient.sol and manage them.
-Available actions in TONOS-CLI include the following:
-
-* setting the network that the utility should connect to
-* creating seed phrases, private and public keys, which will be used for DEXclient management
-* generating contract address
-* deploying contract
-* checking contract balance and status
-* running getter contract methods
-* executing contract methods
-
-Requirements for 14/03/2021:
-* TONOS-CLI 0.6.0
-* TON Solidity Compiler 0.17.7
-* TON SDK ton-client-js 1.5.3+
-
-## 2. TONOS-CLI Installation
-### 2.1. Install TONOS-CLI and download contract files
-#### Linux
-
-Create a folder. Download the .tar.gz file from the latest release from here: https://github.com/tonlabs/tonos-cli/releases to this folder. Extract it:
-
-```
-tar -xvf tonos-cli_v0.6.0_linux.tar.gz
-```
-Download token contract files (RootTokenContract.cpp, RootTokenContract.hpp, TONTokenWallet.cpp, TONTokenWallet.hpp) from https://github.com/tonlabs/ton-labs-contracts/tree/master/cpp/tokens-fungible. Place them into the folder containing the TONOS-CLI executable.
-
-> Note: Make sure you have downloaded the raw versions of the files. If you use wget or curl be aware that github can send you a redirection page instead of a file. Use appropriate tool flag to avoid it.
-
-#### Mac OS
-
-Install Cargo: https://github.com/rust-lang/cargo#compiling-from-source
-
-Build TONOS-CLI tool from source:
-
-```
-> git clone https://github.com/tonlabs/tonos-cli.git
-
-> cd tonos-cli
-
-> cargo build --release
-
-> cd target/release/
-```
-Download token contract files (RootTokenContract.cpp, RootTokenContract.hpp, TONTokenWallet.cpp, TONTokenWallet.hpp) from https://github.com/tonlabs/ton-labs-contracts/tree/master/cpp/tokens-fungible. Place them into the tonos-cli/target/release/ utility folder.
-
-> Note: Make sure you have downloaded the raw versions of the files. If you use wget or curl be aware that github can send you a redirection page instead of a file. Use appropriate tool flag to avoid it.
-
-> Note: On Mac OS all calls of the TONOS-CLI utility should be performed from the tonos-cli/target/release/ folder.
-
-#### Windows
-
-The workflow is the same as for Mac OS (see the section above). However, when using Windows command line, the following syntax should be used for all TONOS-CLI commands:
-```
-tonos-cli <command_name> <options>
-```
-Simply omit the `./` symbols before `tonos-cli`.
-
-### 2.2. Set blockchain network
-
-> Note: By default TONOS-CLI connects to net.ton.dev network.
-
-Use the following command to switch to any other network
-
-```
-./tonos-cli config --url <https://network_url>
-```
-
-You need to do it only once before using the utility.
-
-A .json configuration file will be created in the TONOS-CLI utility folder. The URL of the current network will be specified there. All subsequent calls of the utility will use this file to select the network to connect to.
-
-## 3. Installing TON Solidity Compiler
-
-Install TON-Solidity-Compiler from https://github.com/tonlabs/TON-Solidity-Compiler.
-
-## 4. Build contracts
-```
-<PATH_TO>/TON-Solidity-Compiler/compiler/build/solc/solc DEXclient.sol
-<PATH_TO>/tvm_linker compile DEXclient.code --lib <path-to>/TON-Solidity-Compiler/lib/stdlib_sol.tvm
-```
-It will generate both tvc and abi files.
-We have also prepared ready for deploy set:
-DEXclient.tvc
-DEXclient.abi
+./deployALL.sh
 
 
-## 5. Deploying DEXclient to the Blockchain
-### 5.1. Generating seed phrase
-To generate your seed phrase enter the following command:
-```
+////////////////////////////////////////
+sudo tondev se reset
+
+cp TONwrapper.sol TONwrapperDone.sol
+
+addressWTON=0:b91e58c842b3fa41b644b96af57f83b458e4a02242aa0ec47b1f90776559b21b
+search="ROOT_WRAPPED_TON = address();"
+replace="ROOT_WRAPPED_TON = address("$addressWTON");"
+sed -i "s/$search/$replace/" TONwrapperDone.sol
+
 ./tonos-cli genphrase
 ```
-Terminal displays the generated seed phrase.
-> Note: The seed phrase ensures access to the token root. If lost, the custodian will no longer be able to manage the root. The seed phrase should be kept secret and securely backed up.
-
-### 5.2. Generating token root address and deployment key pair
-1. Use the following command:
+0:366ac7ca9a78e466b5097203a314e58874655b946e26d52aa24cda3a6feb8e48
 ```
+
 ./tonos-cli getkeypair <deploy.keys.json> "<seed_phrase>"
 ```
-`deploy.keys.json` - the file the key pair will be written to.
-The utility generates the file that contains the key pair produced from seed phrase. Use it to generate your address:
-```
-./tonos-cli genaddr DEXclient.tvc DEXclient.abi --setkey deploy.keys.json --wc <workchain_id>
-```
-* `deploy.keys.json` - the file the key pair is read from.
-* `--wc <workchain_id>` - (optional) ID of the workchain the wallet will be deployed to (-1 for masterchain, 0 for basechain). By default this value is set to 0.
-The utility displays the new DEXclient_address (Raw_address).
 
-> Note: The token root address is required for any interactions with the contract.
-
-#### 5.2.1. (Optional) Check that a contract with the address generated on the previous step does not already exist in the blockchain
-Request status for the generated contract address from the blockchain:
 ```
-./tonos-cli account <DEXclient_address>
-```
-#### 5.2.2. Send a few TONs(requiry !<100) to the new address from another contract.
-Create, and if necessary, confirm a transaction from another wallet.
-Ensure that contract address has been created in the blockchain and has Uninit status.
-```
-./tonos-cli account <DEXclient_address>
-```
-### 5.3. Deploy DEXclient contract to the blockchain
-Use the following command:
-```
-./tonos-cli deploy DEXclient.tvc '{}' --abi DEXclient.abi --sign deploy.keys.json --wc <workchain_id>
-```
-* `--wc <workchain_id>` - (optional) ID of the workchain the wallet will be deployed to (-1 for masterchain, 0 for basechain). By default this value is set to 0.
-
-#### 5.4.1. Check the <DEXclient_address> status again
-Now it should be Active.
-```
-./tonos-cli account <DEXclient_address>
+./tonos-cli genaddr DEXclient.tvc DEXclient.abi --setkey deploy.keys.json --wc 0
 ```
 
-#### 5.4.2. Run getters of the DEXclient contract
-Verify that state matches parameters you have provided during deploy.
+```
+./tonos-cli account 
+```
+
+```
+./tonos-cli deploy DEXclient.tvc '{}' --abi DEXclient.abi --sign deploy.keys.json --wc 0
+```
+
+
+
+
 ```
 ./tonos-cli run <DEXclient_address> showContractAddress {} --abi DEXclient.abi
 ./tonos-cli run <DEXclient_address> getAddressWTON {} --abi DEXclient.abi
@@ -162,10 +63,6 @@ We require have on balance more then 100 TON for testing.
 ```
 ./tonos-cli call <DEXclient_address> sendTransfer '{"dest":"<set_destination>","value":"<set_quantity_TON_grams_which_you_want_to_send>","bounce":"<set_bounce_true_or_false>"}' --sign deploy.keys.json --abi DEXclient.abi
 ```
-Configuration parameters:
-* `dest` - (type address) destination for send transfer.
-* `value` - (type uint128) quantity TON grams which you want to transfer.
-* `bounce` - (type bool) if it's set and transaction (generated by the internal outbound message) falls (only at computing phase, not at action phase!) then funds will be returned. Otherwise (flag isn't set or transaction terminated successfully) the address accepts the funds even if the account doesn't exist or is frozen. Defaults to true.
 
 
 
@@ -174,10 +71,7 @@ Configuration parameters:
 ./tonos-cli call <DEXclient_address> wrapTON '{"qtyTONgrams":"<set_quantity_TON_grams>"}' --sign deploy.keys.json --abi DEXclient.abi
 
 ```
-Configuration parameters:
-* `qtyTONgrams` - quantity TON grams which you want to wrap.
 
-You can check wTON balance using comand:
 ```
 ./tonos-cli run <DEXclient_wTon_address> getBalance {} --abi TONTokenWallet.abi
 
@@ -189,7 +83,6 @@ You can unwrap back all your wTON to TON using comand:
 ```
 ### 6.4. DEX preset configuration (deployed on net.ton.dev)
 
-This DEX implementation uses a slightly modified TON Labs TIP-3  RootTokenContract.cpp (https://github.com/radianceteam/dex/blob/main/DEXrootAndWalletcompile/RootTokenContract.cpp). It was modified to allow for deployment of wallets of the same type with different addresses for one internal owner. Pull-request to TONLabs TIP-3: https://github.com/tonlabs/ton-labs-contracts/pull/60 (preliminary confirmed by Mitja on SG call).
 
 - wTON 0:bc865dc0b225ec75e158a2e3f862ce6a2398f733930de3fc626643dfdacfb798
 - wUSDT 0:b7b17288b1e1c1166797fc40f6329aa598ef720176738769f79fa49c87f50feb
@@ -206,23 +99,17 @@ DEXpair.sol without wTON
 - wBTC-wUSDT 0:0a1f28614409c815d3e5f0774ed161c71929ae800b8f4bef6954b65147beb669
 - wETH-wUSDT 0:8588a819c849e7209a4d730dc1d8516ef29f4f17bcd5b459ba2ebae93f36c9a6
 
-We provide some liquidity to all DEXpairs.
-You can check current DEXpair balance ReserveA and ReserveB  using command.
 
 ```
 ./tonos-cli run <DEXpair_address> getReservesBalance '{}' --abi DEXpair.abi.json
 
 ```
-You will get
 - "balanceReserveA": "<nanoTokens_quantity>"
 - "balanceReserveB": "<nanoTokens_quantity>"
 
-where nanoToken is:
-- 1 nanoToken = 0,000 000 001 wTON/wBTC/wETH/wUSDT/etc.
 
 
-## 7. DEXclient management and major actions
-### 7.1. Get DEXclient connection state to DEXpair
+
 ```
 ./tonos-cli run <DEXclient_address> getPair '{"value0":"<DEXpair_address>"}' --abi DEXclient.abi
 
@@ -424,3 +311,6 @@ node returnLiquidity.js
 
 ```
 * `const pathJsonPair = './DEXpairContractTONxUSDT.json';` - select working DEXpair
+Make deposit A or B to DEXpair and return
+```
+./tonos-cli cal

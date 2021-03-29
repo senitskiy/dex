@@ -12,8 +12,8 @@ echo $CONTRACTS
 echo $TVM_LINKER
 echo $TONOS_CLI
 
-./deploy_rootA.sh
-./deploy_rootB.sh
+./deployRootA.sh
+./deployRootB.sh
 # ./deploy_symbol2.sh
 # ./deploy_factory.sh
 # ./add_symbol1_to_dex.sh
