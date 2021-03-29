@@ -14,6 +14,7 @@ echo $TONOS_CLI
 
 ./deployRootA.sh
 ./deployRootB.sh
+./deployRootWTON.sh
 # ./deploy_symbol2.sh
 # ./deploy_factory.sh
 # ./add_symbol1_to_dex.sh
