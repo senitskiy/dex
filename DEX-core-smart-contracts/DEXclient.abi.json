@@ -5,6 +5,8 @@
 		{
 			"name": "constructor",
 			"inputs": [
+				{"name":"wTONroot","type":"address"},
+				{"name":"wTONwrapper","type":"address"}
 			],
 			"outputs": [
 			]
@@ -87,6 +89,15 @@
 			]
 		},
 		{
+			"name": "setPairDepositB",
+			"id": "0x9",
+			"inputs": [
+				{"name":"arg0","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "getPair",
 			"inputs": [
 				{"name":"value0","type":"address"}
@@ -95,21 +106,10 @@
 				{"name":"pairRootA","type":"address"},
 				{"name":"pairReserveA","type":"address"},
 				{"name":"clientDepositA","type":"address"},
-				{"name":"clientAllowanceA","type":"uint128"},
 				{"name":"pairRootB","type":"address"},
 				{"name":"pairReserveB","type":"address"},
 				{"name":"clientDepositB","type":"address"},
-				{"name":"clientAllowanceB","type":"uint128"},
 				{"name":"curPair","type":"address"}
-			]
-		},
-		{
-			"name": "setPairDepositB",
-			"id": "0x9",
-			"inputs": [
-				{"name":"arg0","type":"address"}
-			],
-			"outputs": [
 			]
 		},
 		{

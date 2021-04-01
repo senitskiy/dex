@@ -1,4 +1,4 @@
-pragma solidity >= 0.6.0;
+pragma ton-solidity ^0.40.0;
 pragma AbiHeader expire;
 
 interface IRootTokenContract {
@@ -19,7 +19,6 @@ interface IDEXclient {
 
 interface IDEXpair {
 	function connect() external functionID(0x00000005);
-	function setWalletBalance(uint128 value0) external functionID(0x00000006);
 	function setPairDepositWallet(address value0) external functionID(0x0000000a);
 	function setPairReserveWallet(address value0) external functionID(0x0000000b);
 	function processLiquidity(uint128 qtyA, uint128 qtyB, address returnAddrA, address returnAddrB) external functionID(0x00000011);
@@ -43,9 +42,8 @@ contract DEXpair is IDEXpair {
 	address reserveA;
 	address reserveB;
 	mapping(address => uint128) balanceReserve;
-	mapping(address => uint128) balanceReserveWallet;
 
-	// This is a temporary solution for storage of a ledger of liquidity providers stakes.
+ // This is a temporary solution for storage of a ledger of liquidity providers stakes.
  // In the next stage it will be implemented using pair TIP-3 wallets, similar to Uniswap as proof of stake
 	mapping(address => uint128) reserveProviders;
 	uint128 totalSupply;
@@ -98,7 +96,7 @@ contract DEXpair is IDEXpair {
 		return arg0 == reserveA || arg0 == reserveB;
 	}
 
-	// Modifier that allows public function to accept external calls only from the DEX pair tokens.
+	// Modifier that allows public function to accept external calls only from the DEXpair tokens.
 	modifier onlyDEXpairWallet {
 		require(isDEXpairWallet(msg.sender), 101);
 		tvm.accept();
@@ -110,7 +108,7 @@ contract DEXpair is IDEXpair {
 		return arg0 == rootA || arg0 == rootB;
 	}
 
-	// Modifier that allows public function to accept external calls only from the DEX pair tokens.
+	// Modifier that allows public function to accept external calls only from the DEXpair tokens.
 	modifier onlyDEXpairRoot {
 		require(isDEXpairRoot(msg.sender), 101);
 		tvm.accept();
@@ -141,7 +139,7 @@ contract DEXpair is IDEXpair {
 	}
 
 	// Function to transfers TONs.
-	function sendTransfer(address dest, uint128 value, bool bounce) public view checkOwnerAndAccept {
+	function sendTransfer(address dest, uint128 value, bool bounce) public pure checkOwnerAndAccept {
 		dest.transfer(value, bounce, 3);
 	}
 
@@ -208,41 +206,21 @@ contract DEXpair is IDEXpair {
 		}
 	}
 
-	// Function to send tokens one more.
-	function sendTokens2(address from, address to, uint128 tokens, uint128 grams) public checkOwnerAndAccept returns (address transmitter, address receiver) {
-		transmitter = from;
-		receiver = to;
-		ITONTokenWallet(transmitter).transfer{value:GRAMS_SENDTOKENS_TRANSMITER}(receiver, tokens, grams);
-	}
-
 	// Function to send tokens base.
-	function sendTokens(address from, address to, uint128 tokens, uint128 grams) public checkOwnerAndAccept view returns (address transmitter, address receiver, TvmCell body) {
+	function sendTokens(address from, address to, uint128 tokens, uint128 grams) public pure checkOwnerAndAccept returns (address transmitter, address receiver, TvmCell body) {
 		transmitter = from;
 		receiver = to;
 		body = tvm.encodeBody(ITONTokenWallet(transmitter).transfer, receiver, tokens, grams);
 		transmitter.transfer({value:GRAMS_SENDTOKENS_TRANSMITER, body:body});
 	}
 
-	// Function to ask DEX pair TIP3 wallets for reserveA & reserveB their balances.
-	function askBalancePairWallets() public view checkOwnerAndAccept {
-		address transmitterA = reserveA;
-		address transmitterB = reserveB;
-		TvmCell bodyA = tvm.encodeBody(ITONTokenWallet(transmitterA).getBalance_InternalOwner, 0x00000006);
-		TvmCell bodyB = tvm.encodeBody(ITONTokenWallet(transmitterB).getBalance_InternalOwner, 0x00000006);
-		transmitterA.transfer({value:20000000, body:bodyA});
-		transmitterB.transfer({value:20000000, body:bodyB});
+	// Function to send tokens one more.
+	function sendTokens2(address from, address to, uint128 tokens, uint128 grams) public pure checkOwnerAndAccept returns (address transmitter, address receiver) {
+		transmitter = from;
+		receiver = to;
+		ITONTokenWallet(transmitter).transfer{value:GRAMS_SENDTOKENS_TRANSMITER}(receiver, tokens, grams);
 	}
 
-	// Callback function to set DEX pair balances of TIP3 wallets for reserveA & reserveB.
-	function setWalletBalance(uint128 value0) public onlyDEXpairWallet override functionID(0x00000006) {
-		balanceReserveWallet[msg.sender] = value0;
-	}
-
-	// Function to get DEX pair balances of TIP3 wallets for reserveA & reserveB.
-	function getReserveWalletsBalance() public view alwaysAccept returns (uint128 walletReserveA, uint128 walletReserveB) {
-		walletReserveA = balanceReserveWallet[reserveA];
-		walletReserveB = balanceReserveWallet[reserveB];
-	}
 
 	// Function to get last DEX client in queue for creating empty deposit walletA.
 	function getLastQueueA() private view returns (uint128) {
@@ -358,15 +336,13 @@ contract DEXpair is IDEXpair {
 	}
 
 	// Function to get DEX pair information.
-	function getPair() public view alwaysAccept returns (address addressRootA, address addressRootB, address addressReserveA, address addressReserveB, uint128 balanceReserveA, uint128 balanceReserveB, uint128 walletReserveA, uint128 walletReserveB) {
+	function getPair() public view alwaysAccept returns (address addressRootA, address addressRootB, address addressReserveA, address addressReserveB, uint128 balanceReserveA, uint128 balanceReserveB) {
 		addressRootA = rootA;
 		addressRootB = rootB;
 		addressReserveA = reserveA;
 		addressReserveB = reserveB;
 		balanceReserveA = balanceReserve[reserveA];
 		balanceReserveB = balanceReserve[reserveB];
-		walletReserveA = balanceReserveWallet[reserveA];
-		walletReserveB = balanceReserveWallet[reserveB];
 	}
 
 	// Function to get DEX pair isolated balances of reserveA & reserveB.
@@ -454,13 +430,13 @@ contract DEXpair is IDEXpair {
 	// Function to init first value for ReserveA
 	function initReserveA(uint128 qtyA) private inline  returns (uint128) {
 		initStatusA = true;
-		return (qtyA > 0)?qtyA:1;
+		return qtyA;
 	}
 
 	// Function to init first value for ReserveB
 	function initReserveB(uint128 qtyB) private inline returns (uint128) {
 		initStatusB = true;
-		return (qtyB > 0)?qtyB:1;
+		return qtyB;
 	}
 
 	// Function to get Quotient of division reserve max and min
@@ -489,36 +465,16 @@ contract DEXpair is IDEXpair {
 		address dexclient = processRouter[clientWalletA];
 		Client cc = dexpairclients[dexclient];
 		if (cc.status == 1){
-			cc.qtyA = (cc.qtyA < value0)? cc.qtyA : value0;
+			cc.qtyA = (cc.qtyA > value0)? value0 : cc.qtyA;
 			cc.status = 2;
 			dexpairclients[dexclient] = cc;
 		}
 		if (cc.status == 2){
-			cc.qtyA = (cc.qtyA < value0)? cc.qtyA : value0;
-			uint128 currentReserveA = (initStatusA == true)?getReserveA():initReserveA(cc.qtyA);
-			uint128 currentReserveB = (initStatusB == true)?getReserveB():initReserveB(cc.qtyB);
-			uint128 qtyBforA = math.muldiv(cc.qtyA, currentReserveB, currentReserveA);
-			uint128 qtyAforB = math.muldiv(cc.qtyB, currentReserveA, currentReserveB);
-			uint128 floatTransferA = math.min(cc.qtyA, qtyAforB);
-			uint128 floatTransferB = math.min(cc.qtyB, qtyBforA);
-			if (floatTransferA < 1 || floatTransferB < 1) {
-				cc.qtyA = 0;
-				cc.qtyB = 0;
-				cc.status = 0;
-				dexpairclients[dexclient] = cc;
-			} else {
-				uint128 crmin = math.min(currentReserveA, currentReserveB);
-				uint128 crmax = math.max(currentReserveA, currentReserveB);
-				uint128 crquotient = getQuotient(crmin, crmax);
-				uint128 crremainder = getRemainder(crmin, crmax);
-				uint128 transferMin = math.min(floatTransferA,floatTransferB);
-				uint128 transferOther = transferMin * crquotient + math.muldiv(transferMin,crremainder,crmin);
-				uint128 transferA = (floatTransferA<floatTransferB)?transferMin:transferOther;
-				uint128 transferB = (floatTransferB<floatTransferA)?transferMin:transferOther;
-				uint128 unusedReturnA = cc.qtyA - transferA;
-				uint128 unusedReturnB = cc.qtyB - transferB;
-				processTokens(cc.walletA, reserveA, transferA, GRAMS_SENDTOKENS_RECEIVER);
-				processTokens(cc.walletB, reserveB, transferB, GRAMS_SENDTOKENS_RECEIVER);
+			cc.qtyA = (cc.qtyA > value0)? value0 : cc.qtyA;
+			if (initStatusA == false && initStatusB == false) {
+				uint128 transferA = initReserveA(cc.qtyA);
+				uint128 transferB = initReserveB(cc.qtyB);
+				uint128 transferMin = math.min(transferA,transferB);
 				balanceReserve[reserveA] += transferA;
 				balanceReserve[reserveB] += transferB;
 				reserveProviders[dexclient] += transferMin;
@@ -527,13 +483,49 @@ contract DEXpair is IDEXpair {
 				cc.qtyA = 0;
 				cc.qtyB = 0;
 				dexpairclients[dexclient] = cc;
-				if (unusedReturnA > 0 && unusedReturnB > 0) {
-					processTokens(cc.walletA, cc.returnAddrA, unusedReturnA, GRAMS_SENDTOKENS_RECEIVER);
-					processTokens(cc.walletB, cc.returnAddrB, unusedReturnB, GRAMS_SENDTOKENS_RECEIVER);
-				} else if (unusedReturnA > 0) {
-					processTokens(cc.walletA, cc.returnAddrA, unusedReturnA, GRAMS_SENDTOKENS_RECEIVER);
-				} else if (unusedReturnB > 0) {
-					processTokens(cc.walletB, cc.returnAddrB, unusedReturnB, GRAMS_SENDTOKENS_RECEIVER);
+				processTokens(cc.walletA, reserveA, transferA, GRAMS_SENDTOKENS_RECEIVER);
+				processTokens(cc.walletB, reserveB, transferB, GRAMS_SENDTOKENS_RECEIVER);
+			} else {
+				uint128 currentReserveA = getReserveA();
+				uint128 currentReserveB = getReserveB();
+				uint128 qtyBforA = math.muldiv(cc.qtyA, currentReserveB, currentReserveA);
+				uint128 qtyAforB = math.muldiv(cc.qtyB, currentReserveA, currentReserveB);
+				uint128 floatTransferA = math.min(cc.qtyA, qtyAforB);
+				uint128 floatTransferB = math.min(cc.qtyB, qtyBforA);
+				if (floatTransferA < 1 || floatTransferB < 1) {
+					cc.qtyA = 0;
+					cc.qtyB = 0;
+					cc.status = 0;
+					dexpairclients[dexclient] = cc;
+				} else {
+					uint128 crmin = math.min(currentReserveA, currentReserveB);
+					uint128 crmax = math.max(currentReserveA, currentReserveB);
+					uint128 crquotient = getQuotient(crmin, crmax);
+					uint128 crremainder = getRemainder(crmin, crmax);
+					uint128 transferMin = math.min(floatTransferA,floatTransferB);
+					uint128 transferOther = transferMin * crquotient + math.muldiv(transferMin,crremainder,crmin);
+					uint128 transferA = (floatTransferA<floatTransferB)?transferMin:transferOther;
+					uint128 transferB = (floatTransferB<floatTransferA)?transferMin:transferOther;
+					uint128 unusedReturnA = cc.qtyA - transferA;
+					uint128 unusedReturnB = cc.qtyB - transferB;
+					balanceReserve[reserveA] += transferA;
+					balanceReserve[reserveB] += transferB;
+					reserveProviders[dexclient] += transferMin;
+					totalSupply += transferMin;
+					cc.status = 0;
+					cc.qtyA = 0;
+					cc.qtyB = 0;
+					dexpairclients[dexclient] = cc;
+					processTokens(cc.walletA, reserveA, transferA, GRAMS_SENDTOKENS_RECEIVER);
+					processTokens(cc.walletB, reserveB, transferB, GRAMS_SENDTOKENS_RECEIVER);
+					if (unusedReturnA > 0 && unusedReturnB > 0) {
+						processTokens(cc.walletA, cc.returnAddrA, unusedReturnA, GRAMS_SENDTOKENS_RECEIVER);
+						processTokens(cc.walletB, cc.returnAddrB, unusedReturnB, GRAMS_SENDTOKENS_RECEIVER);
+					} else if (unusedReturnA > 0) {
+						processTokens(cc.walletA, cc.returnAddrA, unusedReturnA, GRAMS_SENDTOKENS_RECEIVER);
+					} else if (unusedReturnB > 0) {
+						processTokens(cc.walletB, cc.returnAddrB, unusedReturnB, GRAMS_SENDTOKENS_RECEIVER);
+					}
 				}
 			}
 		}
@@ -545,36 +537,16 @@ contract DEXpair is IDEXpair {
 		address dexclient = processRouter[clientWalletB];
 		Client cc = dexpairclients[dexclient];
 		if (cc.status == 1){
-			cc.qtyB = (cc.qtyB < value0)? cc.qtyB : value0;
+			cc.qtyB = (cc.qtyB > value0)? value0 : cc.qtyB;
 			cc.status = 2;
 			dexpairclients[dexclient] = cc;
 		}
 		if (cc.status == 2){
-			cc.qtyB = (cc.qtyB < value0)? cc.qtyB : value0;
-			uint128 currentReserveA = (initStatusA == true)?getReserveA():initReserveA(cc.qtyA);
-			uint128 currentReserveB = (initStatusB == true)?getReserveB():initReserveB(cc.qtyB);
-			uint128 qtyBforA = math.muldiv(cc.qtyA, currentReserveB, currentReserveA);
-			uint128 qtyAforB = math.muldiv(cc.qtyB, currentReserveA, currentReserveB);
-			uint128 floatTransferA = math.min(cc.qtyA, qtyAforB);
-			uint128 floatTransferB = math.min(cc.qtyB, qtyBforA);
-			if (floatTransferA < 1 || floatTransferB < 1) {
-				cc.status = 0;
-				cc.qtyA = 0;
-				cc.qtyB = 0;
-				dexpairclients[dexclient] = cc;
-			} else {
-				uint128 crmin = math.min(currentReserveA, currentReserveB);
-				uint128 crmax = math.max(currentReserveA, currentReserveB);
-				uint128 crquotient = getQuotient(crmin, crmax);
-				uint128 crremainder = getRemainder(crmin, crmax);
-				uint128 transferMin = math.min(floatTransferA,floatTransferB);
-				uint128 transferOther = transferMin * crquotient + math.muldiv(transferMin,crremainder,crmin);
-				uint128 transferA = (floatTransferA<floatTransferB)?transferMin:transferOther;
-				uint128 transferB = (floatTransferB<floatTransferA)?transferMin:transferOther;
-				uint128 unusedReturnA = cc.qtyA - transferA;
-				uint128 unusedReturnB = cc.qtyB - transferB;
-				processTokens(cc.walletA, reserveA, transferA, GRAMS_SENDTOKENS_RECEIVER);
-				processTokens(cc.walletB, reserveB, transferB, GRAMS_SENDTOKENS_RECEIVER);
+			cc.qtyB = (cc.qtyB > value0)? value0 : cc.qtyB;
+			if (initStatusA == false && initStatusB == false) {
+				uint128 transferA = initReserveA(cc.qtyA);
+				uint128 transferB = initReserveB(cc.qtyB);
+				uint128 transferMin = math.min(transferA,transferB);
 				balanceReserve[reserveA] += transferA;
 				balanceReserve[reserveB] += transferB;
 				reserveProviders[dexclient] += transferMin;
@@ -583,13 +555,49 @@ contract DEXpair is IDEXpair {
 				cc.qtyA = 0;
 				cc.qtyB = 0;
 				dexpairclients[dexclient] = cc;
-				if (unusedReturnA > 0 && unusedReturnB > 0) {
-					processTokens(cc.walletA, cc.returnAddrA, unusedReturnA, GRAMS_SENDTOKENS_RECEIVER);
-					processTokens(cc.walletB, cc.returnAddrB, unusedReturnB, GRAMS_SENDTOKENS_RECEIVER);
-				} else if (unusedReturnA > 0) {
-					processTokens(cc.walletA, cc.returnAddrA, unusedReturnA, GRAMS_SENDTOKENS_RECEIVER);
-				} else if (unusedReturnB > 0) {
-				  processTokens(cc.walletB, cc.returnAddrB, unusedReturnB, GRAMS_SENDTOKENS_RECEIVER);
+				processTokens(cc.walletA, reserveA, transferA, GRAMS_SENDTOKENS_RECEIVER);
+				processTokens(cc.walletB, reserveB, transferB, GRAMS_SENDTOKENS_RECEIVER);
+			} else {
+				uint128 currentReserveA = getReserveA();
+				uint128 currentReserveB = getReserveB();
+				uint128 qtyBforA = math.muldiv(cc.qtyA, currentReserveB, currentReserveA);
+				uint128 qtyAforB = math.muldiv(cc.qtyB, currentReserveA, currentReserveB);
+				uint128 floatTransferA = math.min(cc.qtyA, qtyAforB);
+				uint128 floatTransferB = math.min(cc.qtyB, qtyBforA);
+				if (floatTransferA < 1 || floatTransferB < 1) {
+					cc.status = 0;
+					cc.qtyA = 0;
+					cc.qtyB = 0;
+					dexpairclients[dexclient] = cc;
+				} else {
+					uint128 crmin = math.min(currentReserveA, currentReserveB);
+					uint128 crmax = math.max(currentReserveA, currentReserveB);
+					uint128 crquotient = getQuotient(crmin, crmax);
+					uint128 crremainder = getRemainder(crmin, crmax);
+					uint128 transferMin = math.min(floatTransferA,floatTransferB);
+					uint128 transferOther = transferMin * crquotient + math.muldiv(transferMin,crremainder,crmin);
+					uint128 transferA = (floatTransferA<floatTransferB)?transferMin:transferOther;
+					uint128 transferB = (floatTransferB<floatTransferA)?transferMin:transferOther;
+					uint128 unusedReturnA = cc.qtyA - transferA;
+					uint128 unusedReturnB = cc.qtyB - transferB;
+					balanceReserve[reserveA] += transferA;
+					balanceReserve[reserveB] += transferB;
+					reserveProviders[dexclient] += transferMin;
+					totalSupply += transferMin;
+					cc.status = 0;
+					cc.qtyA = 0;
+					cc.qtyB = 0;
+					dexpairclients[dexclient] = cc;
+					processTokens(cc.walletA, reserveA, transferA, GRAMS_SENDTOKENS_RECEIVER);
+					processTokens(cc.walletB, reserveB, transferB, GRAMS_SENDTOKENS_RECEIVER);
+					if (unusedReturnA > 0 && unusedReturnB > 0) {
+						processTokens(cc.walletA, cc.returnAddrA, unusedReturnA, GRAMS_SENDTOKENS_RECEIVER);
+						processTokens(cc.walletB, cc.returnAddrB, unusedReturnB, GRAMS_SENDTOKENS_RECEIVER);
+					} else if (unusedReturnA > 0) {
+						processTokens(cc.walletA, cc.returnAddrA, unusedReturnA, GRAMS_SENDTOKENS_RECEIVER);
+					} else if (unusedReturnB > 0) {
+						processTokens(cc.walletB, cc.returnAddrB, unusedReturnB, GRAMS_SENDTOKENS_RECEIVER);
+					}
 				}
 			}
 		}
@@ -698,6 +706,7 @@ contract DEXpair is IDEXpair {
 
 	// Callback function from client deposit walletA to swap A to B
   // variable maxexchange is a temporary solution for linear swap amount control. Max allowed rate change for one swap is 0.5% of current rate.
+	function swapA(uint128 value0) public alwaysAccept override functionID(0x00000056){
 		address clientWalletA = msg.sender;
 		address dexclient = processRouter[clientWalletA];
 		Client cc = dexpairclients[dexclient];
@@ -821,7 +830,7 @@ contract DEXpair is IDEXpair {
 		}
 	}
 
-	// Function to get balance TONgrams for DEX pair.
+	// Function to get balance TONgrams for DEXpair.
 	function getBalanceTONgrams() public pure alwaysAccept returns (uint128 balanceTONgrams){
 		return address(this).balance;
 	}

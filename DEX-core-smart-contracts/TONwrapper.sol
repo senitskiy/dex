@@ -1,4 +1,4 @@
-pragma solidity >= 0.6.0;
+pragma ton-solidity ^0.40.0;
 pragma AbiHeader expire;
 
 interface IRootTokenContract {
@@ -30,7 +30,7 @@ interface ITONWrapper {
 
 contract TONWrapper is ITONWrapper {
 
-	address constant ROOT_WRAPPED_TON = address(0xbc865dc0b225ec75e158a2e3f862ce6a2398f733930de3fc626643dfdacfb798);
+	address ROOT_WRAPPED_TON;
 	address addressZero;
 	bool initStatus;
 
@@ -78,11 +78,11 @@ contract TONWrapper is ITONWrapper {
 		_;
 	}
 
-	function isRoot(address arg0) public pure alwaysAccept returns (bool) {
+	function isRoot(address arg0) public view alwaysAccept returns (bool) {
 		return arg0 == ROOT_WRAPPED_TON;
 	}
 
-	// Modifier that allows public function to accept external calls only from the DEX pair tokens.
+	// Modifier that allows public function to accept external calls only from the DEXpair tokens.
 	modifier onlyRoot {
 		require(isRoot(msg.sender), 101);
 		tvm.accept();
@@ -90,10 +90,17 @@ contract TONWrapper is ITONWrapper {
 	}
 
 	// Init function.
-	constructor() public {
+	constructor(address rootWrappedTON) public {
+		require(checkAddress(rootWrappedTON), 105);
 		require(tvm.pubkey() == msg.pubkey(), 102);
 		tvm.accept();
+		ROOT_WRAPPED_TON = rootWrappedTON;
 		initStatus = false;
+	}
+
+	// Function to check address.
+	function checkAddress(address _address) public pure alwaysAccept returns (bool) {
+		return !_address.isStdZero() && !_address.isNone() && _address.isStdAddrWithoutAnyCast();
 	}
 
 	// Function to create once address for storage used wrappedTONgrams.
@@ -120,7 +127,7 @@ contract TONWrapper is ITONWrapper {
 	}
 
 	// Function to transfers TONs.
-	function sendTransfer(address dest, uint128 value, bool bounce) public view checkOwnerAndAccept {
+	function sendTransfer(address dest, uint128 value, bool bounce) public pure checkOwnerAndAccept {
 		dest.transfer(value, bounce, 3);
 	}
 

@@ -1,4 +1,4 @@
-pragma solidity >= 0.6.0;
+pragma ton-solidity ^0.40.0;
 pragma AbiHeader expire;
 
 interface IRootTokenContract {
@@ -41,8 +41,8 @@ interface ITONWrapper {
 
 contract DEXclient is IDEXclient {
 
-	address constant ROOT_WRAPPED_TON = address(0xbc865dc0b225ec75e158a2e3f862ce6a2398f733930de3fc626643dfdacfb798);
-	address constant WRAPPER_TON = address(0xf927ff6dee96e051fb51e7183c13846a376e549aae29a7a5b699c7ec68a9d213);
+	address ROOT_WRAPPED_TON;
+	address WRAPPER_TON;
 
 	// Wallet structure
 	struct Wallet {
@@ -72,11 +72,9 @@ contract DEXclient is IDEXclient {
 		address rootA;
 		address pairWalletA;
 		address depositWalletA;
-		uint128 allowanceA;
 		address rootB;
 		address pairWalletB;
 		address depositWalletB;
-		uint128 allowanceB;
 	}
 
 	mapping(address => Pair) pairs;
@@ -114,17 +112,17 @@ contract DEXclient is IDEXclient {
 		_;
 	}
 
-
 	// Init function.
-	constructor() public {
+	constructor(address wTONroot, address wTONwrapper) public {
 		require(tvm.pubkey() == msg.pubkey(), 102);
 		tvm.accept();
+		ROOT_WRAPPED_TON = wTONroot;
+		WRAPPER_TON = wTONwrapper;
 		createNewEmptyWallet(ROOT_WRAPPED_TON);
 	}
 
-
 	// Function to transfers plain transfers.
-	function sendTransfer(address dest, uint128 value, bool bounce) public view checkOwnerAndAccept {
+	function sendTransfer(address dest, uint128 value, bool bounce) public pure checkOwnerAndAccept {
 		dest.transfer(value, bounce, 3);
 	}
 
@@ -132,12 +130,14 @@ contract DEXclient is IDEXclient {
 	receive() external {
 	}
 
-	// Function to connect DEXclient to new DEX pair.
-	function connectPair(address pairAddr) public checkOwnerAndAccept view returns (bool statusConnection) {
+	// Function to connect DEXclient to new DEXpair.
+	function connectPair(address pairAddr) public checkOwnerAndAccept view  returns (bool statusConnection) {
 		statusConnection = false;
-		TvmCell body = tvm.encodeBody(IDEXpair(pairAddr).connect);
-		pairAddr.transfer({value:GRAMS_CONNECT_PAIR, body:body});
-		statusConnection = true;
+		if (!pairs.exists(pairAddr)){
+			TvmCell body = tvm.encodeBody(IDEXpair(pairAddr).connect);
+			pairAddr.transfer({value:GRAMS_CONNECT_PAIR, body:body});
+			statusConnection = true;
+		}
 	}
 
 	// Function private for internal create DEXclient wallet for specified TIP3 RootToken.
@@ -192,7 +192,7 @@ contract DEXclient is IDEXclient {
 		wallet = getWalletByRoot(ROOT_WRAPPED_TON);
 	}
 
-	// Callback for DEX pair to set connection data.
+	// Callback for DEXpair to set connection data.
 	function setPair(address arg0, address arg1, address arg2, address arg3, address arg4, address arg5) public alwaysAccept override functionID(0x00000003) {
 		address dexpair = msg.sender;
 		Pair cp = pairs[dexpair];
@@ -202,18 +202,16 @@ contract DEXclient is IDEXclient {
 			cp.rootA = arg0;
 			cp.pairWalletA = arg1;
 			cp.depositWalletA = arg2;
-			cp.allowanceA = 0;
 			cp.rootB = arg3;
 			cp.pairWalletB = arg4;
 			cp.depositWalletB = arg5;
-			cp.allowanceB = 0;
 			createNewEmptyWallet(cp.rootA);
 			createNewEmptyWallet(cp.rootB);
 			pairs[dexpair] = cp;
 		}
 	}
 
-	// Callback for DEX pair to set deposit wallet for tokenA.
+	// Callback for DEXpair to set deposit wallet for tokenA.
 	function setPairDepositA(address arg0) public alwaysAccept override functionID(0x00000008) {
 		address dexpair = msg.sender;
 		Pair cp = pairs[dexpair];
@@ -221,7 +219,7 @@ contract DEXclient is IDEXclient {
 		pairs[dexpair] = cp;
 	}
 
-	// Callback for DEX pair to set deposit wallet for tokenB.
+	// Callback for DEXpair to set deposit wallet for tokenB.
 	function setPairDepositB(address arg0) public alwaysAccept override functionID(0x00000009) {
 		address dexpair = msg.sender;
 		Pair cp = pairs[dexpair];
@@ -229,22 +227,20 @@ contract DEXclient is IDEXclient {
 		pairs[dexpair] = cp;
 	}
 
-	// Function to get DEX pair connection data.
-	function getPair(address value0) public view alwaysAccept returns (address pairRootA, address pairReserveA, address clientDepositA, uint128 clientAllowanceA, address pairRootB, address pairReserveB, address clientDepositB, uint128 clientAllowanceB, address curPair) {
+	// Function to get DEXpair connection data.
+	function getPair(address value0) public view alwaysAccept returns (address pairRootA, address pairReserveA, address clientDepositA, address pairRootB, address pairReserveB, address clientDepositB, address curPair) {
 		Pair cp = pairs[value0];
 		pairRootA = cp.rootA;
 		pairReserveA = cp.pairWalletA;
 		clientDepositA = cp.depositWalletA;
-		clientAllowanceA = cp.allowanceA;
 		pairRootB = cp.rootB;
 		pairReserveB = cp.pairWalletB;
 		clientDepositB = cp.depositWalletB;
-		clientAllowanceB = cp.allowanceB;
 		curPair = value0;
 	}
 
 	// Function to send tokens by DEXclient. Only owner.
-	function sendTokens(address from, address to, uint128 tokens, uint128 grams) public checkOwnerAndAccept view returns (address transmitter, address receiver, TvmCell body) {
+	function sendTokens(address from, address to, uint128 tokens, uint128 grams) public checkOwnerAndAccept pure returns (address transmitter, address receiver, TvmCell body) {
 		transmitter = from;
 		receiver = to;
 		body = tvm.encodeBody(ITONTokenWallet(transmitter).transfer, receiver, tokens, grams);
@@ -252,14 +248,14 @@ contract DEXclient is IDEXclient {
 	}
 
 	// Function2 to send tokens by DEXclient. Only owner.
-	function sendTokens2(address from, address to, uint128 tokens, uint128 grams) public checkOwnerAndAccept returns (address transmitter, address receiver) {
+	function sendTokens2(address from, address to, uint128 tokens, uint128 grams) public checkOwnerAndAccept pure returns (address transmitter, address receiver) {
 		transmitter = from;
 		receiver = to;
 		ITONTokenWallet(transmitter).transfer{value:GRAMS_SENDTOKENS_TRANSMITER}(receiver, tokens, grams);
 	}
 
 	// Function3 to send tokens by DEXclient. Only owner.
-	function sendTokens3(address from, address to, uint128 tokens) public checkOwnerAndAccept view returns (address transmitter, address receiver, TvmCell body) {
+	function sendTokens3(address from, address to, uint128 tokens) public checkOwnerAndAccept pure returns (address transmitter, address receiver, TvmCell body) {
 		transmitter = from;
 		receiver = to;
 		body = tvm.encodeBody(ITONTokenWallet(transmitter).transfer, receiver, tokens, GRAMS_SENDTOKENS_RECEIVER);
@@ -267,7 +263,7 @@ contract DEXclient is IDEXclient {
 	}
 
 	// Function to ask wallet where DEXclient internal_owner for balance.
-	function askBalanceToken(address walletAddr) public view checkOwnerAndAccept {
+	function askBalanceToken(address walletAddr) public pure checkOwnerAndAccept {
 		address transmitter = walletAddr;
 		TvmCell body = tvm.encodeBody(ITONTokenWallet(transmitter).getBalance_InternalOwner, 0x00000004);
 		transmitter.transfer({value:GRAMS_GET_BALANCE, body:body});
@@ -295,7 +291,7 @@ contract DEXclient is IDEXclient {
 		walletBal = wc.balance;
 	}
 
-	// Function to get DEXclient wallets from same roots as DEX pair. DEXclient internal_owner of this wallets.
+	// Function to get DEXclient wallets from same roots as DEXpair. DEXclient internal_owner of this wallets.
 	function getPairClientWallets(address pairAddr) public view alwaysAccept returns (address walletA, address walletB, address pairReturn){
 		Pair cp = pairs[pairAddr];
 		walletA = roots[cp.rootA];
@@ -303,14 +299,14 @@ contract DEXclient is IDEXclient {
 		pairReturn = pairAddr;
 	}
 
-	// Function to ask from DEXclient balances of wallets from same roots as DEX pair. DEXclient internal_owner of this wallets.
+	// Function to ask from DEXclient balances of wallets from same roots as DEXpair. DEXclient internal_owner of this wallets.
 	function askPairWalletsBalance(address pairAddr) public view checkOwnerAndAccept {
 		Pair cp = pairs[pairAddr];
 		askBalanceToken(roots[cp.rootA]);
 		askBalanceToken(roots[cp.rootB]);
 	}
 
-	// Function to get DEXclient balances of wallets from same roots as DEX pair. First need execute askPairWalletsBalance.
+	// Function to get DEXclient balances of wallets from same roots as DEXpair. First need execute askPairWalletsBalance.
 	function getPairWalletsBalance(address pairAddr) public view alwaysAccept returns (uint128 balanceWalletA, uint128 balanceWalletB) {
 		Pair cp = pairs[pairAddr];
 		balanceWalletA = getBalanceTokenWallet(roots[cp.rootA]);
@@ -329,7 +325,7 @@ contract DEXclient is IDEXclient {
 		dexclientUINT256 = dexclient.value;
 	}
 
-	// Function to make tokenA and tokenB deposit for DEX pair.
+	// Function to make tokenA and tokenB deposit for DEXpair.
 	function makeABdepositToPair(address pairAddr, uint128 qtyA, uint128 qtyB) public view checkOwnerAndAccept returns (bool makeDepositStatus) {
 		makeDepositStatus = false;
 		require(pairs.exists(pairAddr), 102);
@@ -341,7 +337,7 @@ contract DEXclient is IDEXclient {
 		makeDepositStatus = true;
 	}
 
-	// Function to make tokenA deposit for DEX pair.
+	// Function to make tokenA deposit for DEXpair.
 	function makeAdepositToPair(address pairAddr, uint128 qtyA) public view checkOwnerAndAccept returns (bool makeDepositStatus) {
 		makeDepositStatus = false;
 		require(pairs.exists(pairAddr), 102);
@@ -351,7 +347,7 @@ contract DEXclient is IDEXclient {
 		makeDepositStatus = true;
 	}
 
-	// Function to make tokenB deposit for DEX pair.
+	// Function to make tokenB deposit for DEXpair.
 	function makeBdepositToPair(address pairAddr, uint128 qtyB) public view checkOwnerAndAccept returns (bool makeDepositStatus) {
 		makeDepositStatus = false;
 		require(pairs.exists(pairAddr), 102);
@@ -361,7 +357,7 @@ contract DEXclient is IDEXclient {
 		makeDepositStatus = true;
 	}
 
-	// Function to return tokens from DEX pair deposits.
+	// Function to return tokens from DEXpair deposits.
 	function returnDepositFromPair(address pairAddr) public view checkOwnerAndAccept returns (bool returnDepositStatus) {
 		returnDepositStatus = false;
 		require(pairs.exists(pairAddr), 102);
@@ -372,7 +368,7 @@ contract DEXclient is IDEXclient {
 		returnDepositStatus = true;
 	}
 
-	// Function to provide liquidity to DEX pair.
+	// Function to provide liquidity to DEXpair.
 	function processLiquidity(address pairAddr, uint128 qtyA, uint128 qtyB) public view checkOwnerAndAccept returns (bool processLiquidityStatus) {
 		processLiquidityStatus = false;
 		require(pairs.exists(pairAddr), 102);
@@ -383,7 +379,7 @@ contract DEXclient is IDEXclient {
 		processLiquidityStatus = true;
 	}
 
-	// Function to returm all liquidity from DEX pair.
+	// Function to returm all liquidity from DEXpair.
 	function returnAllLiquidity(address pairAddr) public view checkOwnerAndAccept returns (bool returnLiquidityStatus) {
 		returnLiquidityStatus = false;
 		require(pairs.exists(pairAddr), 102);

@@ -5,6 +5,7 @@
 		{
 			"name": "constructor",
 			"inputs": [
+				{"name":"rootWrappedTON","type":"address"}
 			],
 			"outputs": [
 			]
@@ -13,6 +14,15 @@
 			"name": "isRoot",
 			"inputs": [
 				{"name":"arg0","type":"address"}
+			],
+			"outputs": [
+				{"name":"value0","type":"bool"}
+			]
+		},
+		{
+			"name": "checkAddress",
+			"inputs": [
+				{"name":"_address","type":"address"}
 			],
 			"outputs": [
 				{"name":"value0","type":"bool"}

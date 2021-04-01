@@ -66,19 +66,6 @@
 			]
 		},
 		{
-			"name": "sendTokens2",
-			"inputs": [
-				{"name":"from","type":"address"},
-				{"name":"to","type":"address"},
-				{"name":"tokens","type":"uint128"},
-				{"name":"grams","type":"uint128"}
-			],
-			"outputs": [
-				{"name":"transmitter","type":"address"},
-				{"name":"receiver","type":"address"}
-			]
-		},
-		{
 			"name": "sendTokens",
 			"inputs": [
 				{"name":"from","type":"address"},
@@ -93,28 +80,16 @@
 			]
 		},
 		{
-			"name": "askBalancePairWallets",
+			"name": "sendTokens2",
 			"inputs": [
+				{"name":"from","type":"address"},
+				{"name":"to","type":"address"},
+				{"name":"tokens","type":"uint128"},
+				{"name":"grams","type":"uint128"}
 			],
 			"outputs": [
-			]
-		},
-		{
-			"name": "setWalletBalance",
-			"id": "0x6",
-			"inputs": [
-				{"name":"value0","type":"uint128"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "getReserveWalletsBalance",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"walletReserveA","type":"uint128"},
-				{"name":"walletReserveB","type":"uint128"}
+				{"name":"transmitter","type":"address"},
+				{"name":"receiver","type":"address"}
 			]
 		},
 		{
@@ -168,9 +143,7 @@
 				{"name":"addressReserveA","type":"address"},
 				{"name":"addressReserveB","type":"address"},
 				{"name":"balanceReserveA","type":"uint128"},
-				{"name":"balanceReserveB","type":"uint128"},
-				{"name":"walletReserveA","type":"uint128"},
-				{"name":"walletReserveB","type":"uint128"}
+				{"name":"balanceReserveB","type":"uint128"}
 			]
 		},
 		{
