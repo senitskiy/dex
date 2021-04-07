@@ -1,8 +1,29 @@
+tondev tonos-cli install
+
+
+tondev sol set --compiler 0.38.0 --linker 0.23.54
+
+sudo tondev sol update --force
+
+Install
+npm i -g tondev@0.4.0
+Update
+npm r -g tondev  
+npm i -g tondev0.4.0
+
+
+
+
+TONDev Version: 0.4.0
+TVM-linker: 0.2.1
+
 get_contracts.sh
 get_network.sh
 get_tonos_cli.sh
 get_tvm_linker.sh
 
+
+////////////////////////////////////////
 sudo tondev se start
 
 ./deployALL.sh

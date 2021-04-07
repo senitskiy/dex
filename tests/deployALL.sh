@@ -2,22 +2,25 @@
 
 # ================================================================================
 #
-NETWORK=$(./get_network.sh)
-CONTRACTS=$(./get_contracts.sh)
-TVM_LINKER=$(./get_tvm_linker.sh)
-TONOS_CLI=$(./get_tonos_cli.sh)
+NETWORK=$(./configes/get_network.sh)
+CONTRACTS=$(./configes/get_contracts.sh)
+TVM_LINKER=$(./configes/get_tvm_linker.sh)
+TONOS_CLI=$(./configes/get_tonos_cli.sh)
 
 echo $NETWORK
 echo $CONTRACTS
 echo $TVM_LINKER
 echo $TONOS_CLI
+echo ====================================================
 
-./deployRootA.sh
-./deployRootB.sh
-# ./deployRootWTON.sh
-# ./deploy_symbol2.sh
-# ./deploy_factory.sh
-# ./add_symbol1_to_dex.sh
-# ./add_symbol2_to_dex.sh
-# ./add_pair_1_2_to_dex.sh
-# ./deploy_debot.sh
+
+./deploy/deploy1RootA.sh
+# ./deploy/deploy2RootB.sh
+# ./deploy/deploy3WTON.sh
+# ./deploy/deploy4Root4WTON.sh
+# ./deploy/deploy5pairA-B.sh
+# ./deploy/deploy6pairB-WTON.sh
+# ./deploy/deploy7client1.sh
+# ./deploy/deploy8client2.sh
+# ./deploy/deploy9connect-client1toPairA-B.sh
+# ./deploy/deploy10connect-client2toPairA-B.sh
