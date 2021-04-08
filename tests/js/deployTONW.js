@@ -151,7 +151,7 @@ async function main(client) {
     });
     try {
         console.log("Hello localhost TON!");
-        await main(client);
+        await  (client);
         process.exit(0);
     } catch (error) {
         if (error.code === 504) {

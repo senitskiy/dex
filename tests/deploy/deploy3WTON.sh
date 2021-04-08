@@ -12,7 +12,7 @@ GIVER="0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94"
 # CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/RootTokenContract.tvc  | grep code: | cut -c 8-)
 # CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/RootTokenContract.tvc | grep code: | cut -c 8-)
 CODE=$(cat ./code.txt) #export TVM_WALLET_CODE=`cat code.txt`
-KEYS_FILE="./RootWTON/deploy.keys.json"
+KEYS_FILE="./WTON/deploy.keys.json"
 PUBKEY=$(cat $KEYS_FILE | grep public | cut -c 14-77)
 
 
@@ -27,6 +27,11 @@ ROOT_ADDR=$(cat $ROOT_ADDR_FILE | grep address | cut -c 15-80)
 ROOT_ADDR_COMPILE=$(cat $ROOT_ADDR_FILE | grep address | cut -c 17-80)
 addressWTON=0x$ROOT_ADDR_COMPILE
 
+
+
+ROOT_WTON_ADDR_FILE="./RootWTON/address.json"
+ROOT_WTON_ADDR=$(cat $ROOT_WTON_ADDR_FILE | grep address | cut -c 15-80)
+echo $ROOT_WTON_ADDR
 # cp TONwrapper.sol TONwrapperDone.sol
 
 # search="ROOT_WRAPPED_TON = address();"
@@ -59,8 +64,9 @@ echo WTON: $ROOT_ADDR
 
 
 # ROOT_ADDR3=0:366ac7ca9a78e466b5097203a314e58874655b946e26d52aa24cda3a6feb8e48
-# $TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_ADDR3\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+$TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_WTON_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
 
+echo ROOT_WTON: $ROOT_WTON_ADDR
 # $TONOS_CLI -u $NETWORK account $ROOT_ADDR 
 
     #   { "name":"name", "type":"bytes" },
@@ -71,7 +77,7 @@ echo WTON: $ROOT_ADDR
     # { "name":"wallet_code", "type":"cell" },
     # { "name":"total_supply", "type":"uint128" }
 
-ROOT_DATA='{"name":"'$ROOT_NAME'","symbol":"'$ROOT_SYMBOL'","decimals":"'$ROOT_DECIMALS'","root_public_key":"0x'$ROOT_OWNER_PK'","root_owner":"'$ROOT_OWNER'","wallet_code":"'$ROOT_CODE'","total_supply":"'$TOTAL_SUPPLY'"}'
+# ROOT_DATA='{"name":"'$ROOT_NAME'","symbol":"'$ROOT_SYMBOL'","decimals":"'$ROOT_DECIMALS'","root_public_key":"0x'$ROOT_OWNER_PK'","root_owner":"'$ROOT_OWNER'","wallet_code":"'$ROOT_CODE'","total_supply":"'$TOTAL_SUPPLY'"}'
 # '{"name":"${nameRootTokenHex}","symbol":"${symbolRootTokenHex}", "decimals":"${decimals}","root_public_key":"0x${contractKeysPublic}", "root_owner":"${root_owner}", "wallet_code":"'${TVM_WALLET_CODE.TVM_WALLET_CODE}'","total_supply":"${total_supply}"}'
 
 # INNER_ADDRES=$($TONOS_CLI -u $NETWORK deploy ./TONwrapperDone.tvc {} --abi ./TONwrapperDone.abi.json --sign ./RootWTON/deploy.keys.json --wc 0 | awk '/"account_address": /' | cut -c 25-90) #| awk '/Transaction /'
@@ -80,11 +86,19 @@ ROOT_DATA='{"name":"'$ROOT_NAME'","symbol":"'$ROOT_SYMBOL'","decimals":"'$ROOT_D
 # $TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$INNER_ADDRES\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
 # $TONOS_CLI -u $NETWORK deploy ./TONwrapperDone.tvc $ROOT_DATA --abi ./TONwrapperDone.abi.json --sign ./RootWTON/deploy.keys.json --wc 0 #| awk '/Transaction /'
 
-RESULT_DEPLOY=$($TONOS_CLI -u $NETWORK deploy --abi ./WTON/TONwrapper.abi.json --sign ./WTON/deploy.keys.json ./WTON/TONwrapper.tvc '{"rootWrappedTON":"0:f99b144dd76a37fad58173b015b443eaab6c8a6ea19325f17dbc83a5959db483"}' --wc 0 | grep "Transaction" | cut -c 12-) 
+
+
+RESULT_DEPLOY=$($TONOS_CLI -u $NETWORK deploy --abi ./WTON/TONwrapper.abi.json --sign ./WTON/deploy.keys.json ./WTON/TONwrapper.tvc '{"rootWrappedTON":"'$ROOT_WTON_ADDR'"}' --wc 0 | grep "Transaction" | cut -c 12-) 
 echo Status Deploy: $RESULT_DEPLOY
+
+# $TONOS_CLI -u $NETWORK deploy --abi ./WTON/TONwrapper.abi.json --sign ./WTON/deploy.keys.json ./WTON/TONwrapper.tvc '{"rootWrappedTON":"'$ROOT_ADDR'"}' --wc 0 
+
+# $TONOS_CLI -u $NETWORK account $ROOT_ADDR
 
 ACCOUNT_STATUS=$($TONOS_CLI -u $NETWORK account $ROOT_ADDR | grep "acc_type:" | cut -c 10-)
 echo Status account: $ACCOUNT_STATUS
+
+
 # $TONOS_CLI -u $NETWORK account $INNER_ADDRES 
 # ./tonos-cli run ${rawAddress} getName {} --abi RootTokenContract.abi
 # ./tonos-cli run ${rawAddress} getSymbol {} --abi RootTokenContract.abi

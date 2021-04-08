@@ -7,9 +7,9 @@ TONOS_CLI=$(./configes/get_tonos_cli.sh)
 
 AMOUNT_TONS=6000000000
 GIVER="0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94"
-CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/TONTokenWallet.tvc | grep code: | cut -c 8-)
+CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/RootTokenContract.tvc  | grep code: | cut -c 8-)
 # CODE1=$($TVM_LINKER decode --tvc ../$CONTRACTS/TONTokenWallet.tvc > code1.txt) # | grep code: | cut -c 8-) #> code1.txt)
-# CODE=$(cat ./code7.txt) #export TVM_WALLET_CODE=`cat code.txt`
+# CODE=$(cat ./code1.txt) #export TVM_WALLET_CODE=`cat code.txt`
 KEYS_FILE="./RootWTON/deploy.keys.json"
 PUBKEY=$(cat $KEYS_FILE | grep public | cut -c 14-77)
 # echo $CODE
@@ -25,8 +25,6 @@ ROOT_OWNER_PK="0"
 ROOT_OWNER_ADDRESS=$ZERO_ADDRESS
 # ROOT_CODE=$CODE
 TOTAL_SUPPLY="1000000" 
-
-echo ========================================================================
 
 # echo 11
 ROOT_OWNER_FILE="./WTON/address.json"
@@ -45,7 +43,7 @@ ROOT_ADDR=$(cat $ROOT_ADDR_FILE | grep address | cut -c 15-80)
 # echo ROOT_ADDR: $ROOT_ADDR
 
 # $TONOS_CLI -u $NETWORK account $ROOT_ADDR
-
+echo ========================================================================
 echo Deploy Root for WTON
 $TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
 echo RootWTON: $ROOT_ADDR
@@ -68,8 +66,6 @@ ROOT_DATA='{"name":"'$ROOT_NAME'","symbol":"'$ROOT_SYMBOL'","decimals":"'$ROOT_D
 # $TONOS_CLI -u $NETWORK account $ROOT_ADDR | awk '/acc_type: /'
 # echo 1
 RESULT_DEPLOY=$($TONOS_CLI -u $NETWORK deploy ../$CONTRACTS/RootTokenContract.tvc $ROOT_DATA --abi ../$CONTRACTS/RootTokenContract.abi.json --sign ./RootWTON/deploy.keys.json --wc 0 | grep "Transaction" | cut -c 12-) 
-# $TONOS_CLI -u $NETWORK deploy ../$CONTRACTS/RootTokenContract.tvc $ROOT_DATA --abi ../$CONTRACTS/RootTokenContract.abi.json --sign ./RootWTON/deploy.keys.json --wc 0
-# echo 2
 echo Status Deploy: $RESULT_DEPLOY
 
 # $TONOS_CLI -u $NETWORK deploy ../$CONTRACTS/RootTokenContract.tvc $ROOT_DATA --abi ../$CONTRACTS/RootTokenContract.abi.json --sign ./RootWTON/deploy.keys.json --wc 0

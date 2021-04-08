@@ -1,0 +1,1 @@
+tonos-cli call 0:2225d70ebde618b9c1e3650e603d6748ee6495854e7512dfc9c287349b4dc988 pay '{"addr":"0:e991e837a818c02250822d2eb8c25511c026cb6ec95fa0e3add1bd6adec0c502"}' --abi giver.abi.json 

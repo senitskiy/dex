@@ -6,7 +6,7 @@ TVM_LINKER=$(./configes/get_tvm_linker.sh)
 TONOS_CLI=$(./configes/get_tonos_cli.sh)
 
 AMOUNT_TONS=6000000000
-GIVER="0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94"
+# GIVER=
 # CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/RootTokenContract.tvc  | grep code: | cut -c 8-)
 # CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/RootTokenContract.tvc | grep code: | cut -c 8-)
 CODE=$(cat ./code.txt) #export TVM_WALLET_CODE=`cat code.txt`
@@ -30,7 +30,16 @@ echo Deploy Root A
 ROOT_ADDR_FILE="./RootA/address.json"
 ROOT_ADDR=$(cat $ROOT_ADDR_FILE | grep address | cut -c 15-80)
 
-$TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+
+if [ $NETWORK = "http://127.0.0.1" ]
+then
+    $TONOS_CLI -u $NETWORK call 0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94 sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+elif [$NETWORK = "https://net.ton.dev"]
+then
+    $TONOS_CLI -u $NETWORK call 0:2225d70ebde618b9c1e3650e603d6748ee6495854e7512dfc9c287349b4dc988 pay '{"addr":$ROOT_ADDR}' --abi ./giver.abi.json   
+fi
+
+
 echo RootA: $ROOT_ADDR
 
 ROOT_DATA='{"name":"'$ROOT_NAME'","symbol":"'$ROOT_SYMBOL'","decimals":"'$ROOT_DECIMALS'","root_public_key":"0x'$ROOT_OWNER_PK'","root_owner":"'$ROOT_OWNER'","wallet_code":"'$ROOT_CODE'","total_supply":"'$TOTAL_SUPPLY'"}'
