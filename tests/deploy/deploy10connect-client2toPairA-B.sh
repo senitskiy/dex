@@ -65,3 +65,85 @@ RESULT_DEPLOY=$($TONOS_CLI -u $NETWORK call --abi ./sol/DEXclient.abi.json --sig
 # RESULT_DEPLOY=$($TONOS_CLI -u $NETWORK deploy ./sol/DEXpair.tvc $ROOT_DATA --abi ./sol/DEXpair.abi.json --sign ./pairB-WTON/deploy.keys.json --wc 0 | grep "Transaction" | cut -c 12-) 
 echo Status connect client-1 to pairA_B: $RESULT_DEPLOY
 
+
+ROOT_A_ADDR_FILE="./RootA/address.json"
+ROOT_A_ADDR=$(cat $ROOT_A_ADDR_FILE | grep address | cut -c 15-80)
+echo RootA: $ROOT_A_ADDR
+
+ROOT_B_ADDR_FILE="./RootB/address.json"
+ROOT_B_ADDR=$(cat $ROOT_B_ADDR_FILE | grep address | cut -c 15-80)
+echo RootB: $ROOT_B_ADDR
+
+
+# getWalletByRoot(address rootAddr)
+GETWALLETBYROOTA=$($TONOS_CLI -u $NETWORK run $CLIENT_ADDR getWalletByRoot '{"rootAddr":"'$ROOT_A_ADDR'"}' --abi ./sol/DEXclient.abi.json | grep "wallet" | cut -c 14-79)
+echo Get Wallet By Root A: $GETWALLETBYROOTA
+
+# 	// Function to ask wallet where DEXclient internal_owner for balance.
+# 	function askBalanceToken(address walletAddr) 
+
+#ASKBALANCETOKEN=$(
+    # $TONOS_CLI -u $NETWORK run $CLIENT_ADDR askBalanceToken '{"walletAddr":"'$GETWALLETBYROOTA'"}' --abi ./sol/DEXclient.abi.json  #) # | grep "wallet" | cut -c 11-)
+#echo Ask balance token to wallet: $GETWALLETBYROOTA
+#echo : $ASKBALANCETOKEN
+
+
+
+# getWalletByRoot(address rootAddr)
+GETWALLETBYROOTB=$($TONOS_CLI -u $NETWORK run $CLIENT_ADDR getWalletByRoot '{"rootAddr":"'$ROOT_B_ADDR'"}' --abi ./sol/DEXclient.abi.json | grep "wallet" | cut -c 11-)
+echo Get Wallet By Root B: $GETWALLETBYROOTB
+
+
+
+# getPair value0
+echo Get to pair to pairA_B: 
+$TONOS_CLI -u $NETWORK run $CLIENT_ADDR getPair '{"value0":"'$pairA_B'"}' --abi ./sol/DEXclient.abi.json | awk '/Result: {/,/}/' # | grep "wallet" | cut -c 11-) # awk '/Result: {/,/}/'
+
+
+# 	// Function to ask wallet where DEXclient internal_owner for balance.
+# 	function askBalanceToken(address walletAddr) 
+
+    # 	// Function to ask all wallets where DEXclient internal_owner for balance.
+	# function askBalanceAllTokens() public view 
+
+    # 	// Function to get wallet balance where DEXclient internal_owner after callbak came.
+	# function getBalanceTokenWallet(address walletAddr)
+
+    # 	// Function to get DEXclient wallets from same roots as DEXpair. DEXclient internal_owner of this wallets.
+	# function getPairClientWallets(address pairAddr) 
+
+    # 	// Function to ask from DEXclient balances of wallets from same roots as DEXpair. DEXclient internal_owner of this wallets.
+	# function askPairWalletsBalance(address pairAddr)
+
+    # 	function getPairWalletsBalance(address pairAddr)
+
+    #     	// Function to get all connected pairs and created wallets of DEXclient.
+	# function getAllDataPreparation()
+
+    # 	function showContractAddress() public pure
+
+    #     	// Function to return tokens from DEXpair deposits.
+	# function returnDepositFromPair(address pairAddr)
+
+    # 	// Function to get balance TONgrams for DEXclient.
+	# function getBalanceTONgrams() 
+
+
+
+
+
+
+
+    # 	// Function to provide liquidity to DEXpair.
+	# function processLiquidity(address pairAddr, uint128 qtyA, uint128 qtyB) 
+
+    # 	// Function to returm all liquidity from DEXpair.
+	# function returnAllLiquidity(address pairAddr)
+
+
+
+    # 	// Function to wrap TON.
+	# function wrapTON(uint128 qtyTONgrams)
+
+    # 	// Function to unwrap TON.
+	# function unwrapTON() 

@@ -14,7 +14,23 @@ then
 fi
 
 
-./tonos-cli genphrase
+# tonos-cli genphrase
+
+
+
+
+
+# ROOT_ADDR_FILE="./WTON/address.json"
+# ROOT_ADDR=$(cat $ROOT_ADDR_FILE | grep address | cut -c 15-80)
+
+# ROOT_WTON_ADDR_FILE="./RootWTON/address.json"
+# ROOT_WTON_ADDR=$(cat $ROOT_WTON_ADDR_FILE | grep address | cut -c 15-80)
+# echo $ROOT_WTON_ADDR
+
+# $TONOS_CLI -u $NETWORK call $ROOT_ADDR isRoot "{\"arg0\":\"$ROOT_WTON_ADDR\"}" --abi ./WTON/TONwrapper.abi.json
+
+
+# tonos-cli call <root_address> deployWallet '{"_answer_id":"0", "workchain_id":<workchain_id>,"pubkey":"0x<wallet public key>", "internal_owner":"0", "tokens":"<Tokens number>","grams":<Tons>}' --sign deploy.keys.json --abi RootTokenContract.abi
 
 # AMOUNT_TONS=100000000000
 # GIVER="0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94"

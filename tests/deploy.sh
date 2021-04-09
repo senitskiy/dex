@@ -14,13 +14,13 @@ echo Linker:                $TVM_LINKER
 echo Tonos-cli:             $TONOS_CLI
 # echo ====================================================
 
-./deploy/deploy1RootA.sh
-./deploy/deploy2RootB.sh
-./deploy/deploy3WTON.sh
-./deploy/deploy4Root4WTON.sh
-./deploy/deploy5pairA-B.sh
-./deploy/deploy6pairB-WTON.sh
-./deploy/deploy7client1.sh
-./deploy/deploy8client2.sh
+# ./deploy/deploy1RootA.sh
+# ./deploy/deploy2RootB.sh
+# ./deploy/deploy3WTON.sh
+# ./deploy/deploy4Root4WTON.sh
+# ./deploy/deploy5pairA-B.sh
+# ./deploy/deploy6pairB-WTON.sh
+# ./deploy/deploy7client1.sh
+# ./deploy/deploy8client2.sh
 ./deploy/deploy9connect-client1toPairA-B.sh
 ./deploy/deploy10connect-client2toPairA-B.sh

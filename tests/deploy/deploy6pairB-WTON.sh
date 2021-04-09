@@ -47,7 +47,16 @@ ROOT_A_ADDR_FILE="./RootWTON/address.json"
 ROOT_A_ADDR=$(cat $ROOT_A_ADDR_FILE | grep address | cut -c 15-80)
 echo RootWTON: $ROOT_A_ADDR
 
-$TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$PAIR_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+# $TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$PAIR_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+
+if [ $NETWORK = "http://127.0.0.1" ]
+then
+    $TONOS_CLI -u $NETWORK call 0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94 sendGrams "{\"dest\":\"$PAIR_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+elif [ $NETWORK = "https://net.ton.dev" ]
+then
+    $TONOS_CLI -u $NETWORK call 0:2225d70ebde618b9c1e3650e603d6748ee6495854e7512dfc9c287349b4dc988 pay '{"addr":"'$PAIR_ADDR'"}' --abi ./giver.abi.json   
+fi
+
 
 ROOT_DATA='{"root0":"'$ROOT_B_ADDR'","root1":"'$ROOT_A_ADDR'"}'
 # '{"name":"${nameRootTokenHex}","symbol":"${symbolRootTokenHex}", "decimals":"${decimals}","root_public_key":"0x${contractKeysPublic}", "root_owner":"${root_owner}", "wallet_code":"'${TVM_WALLET_CODE.TVM_WALLET_CODE}'","total_supply":"${total_supply}"}'
@@ -58,3 +67,18 @@ echo Status Deploy: $RESULT_DEPLOY
 
 ACCOUNT_STATUS=$($TONOS_CLI -u $NETWORK account $PAIR_ADDR | grep "acc_type:" | cut -c 10-)
 echo Status account: $ACCOUNT_STATUS
+
+GETTOTALSUPPLY=$($TONOS_CLI -u $NETWORK run $PAIR_ADDR getTotalSupply {} --abi ./sol/DEXpair.abi.json | grep "value0" | cut -c 13-)
+echo Pair reserve Total supply: $GETTOTALSUPPLY
+
+# getBalanceTONgrams
+GETBALANCETONGRAMS=$($TONOS_CLI -u $NETWORK run $PAIR_ADDR getBalanceTONgrams {} --abi ./sol/DEXpair.abi.json | grep "balanceTONgrams" | cut -c 21-)
+echo Get Balance TON grams: $GETBALANCETONGRAMS
+
+# getReservesBalance() 
+GETRESERVEBALANCEA=$($TONOS_CLI -u $NETWORK run $PAIR_ADDR getReservesBalance {} --abi ./sol/DEXpair.abi.json | grep "balanceReserveA" | cut -c 22-)
+echo Get Reserves Root "A" Balance: $GETRESERVEBALANCEA
+
+# getReservesBalance() 
+GETRESERVEBALANCEB=$($TONOS_CLI -u $NETWORK run $PAIR_ADDR getReservesBalance {} --abi ./sol/DEXpair.abi.json | grep "balanceReserveB" | cut -c 22-)
+echo Get Reserves Root "B" Balance: $GETRESERVEBALANCEB

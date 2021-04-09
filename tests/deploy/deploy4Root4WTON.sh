@@ -36,18 +36,42 @@ ROOT_OWNER_FILE="./WTON/address.json"
 ROOT_OWNER_COMPILE=$(cat $ROOT_OWNER_FILE | grep address | cut -c 17-80)
 # echo 11
 ROOT_OWNER=0x$ROOT_OWNER_COMPILE
-echo ROOT_OWNER: $ROOT_OWNER
+# echo ROOT_OWNER: $ROOT_OWNER
 
 # ROOT_DATA='{"_name":"'$ROOT_NAME'","_symbol":"'$ROOT_SYMBOL'","_decimals":'$ROOT_DECIMALS',"_rootPublicKey":"0x'$ROOT_OWNER_PK'","_rootOwnerAddress":"'$ZERO_ADDRESS'","_code":"'$CODE'"}'
 
 ROOT_ADDR_FILE="./RootWTON/address.json"
 ROOT_ADDR=$(cat $ROOT_ADDR_FILE | grep address | cut -c 15-80)
+
+# ROOT_WTON_ADDR_FILE="./RootWTON/address.json"
+# ROOT_WTON_ADDR=$(cat $ROOT_WTON_ADDR_FILE | grep address | cut -c 15-80)
+
+WTON_ADDR_FILE="./WTON/address.json"
+WTON_ADDR=$(cat $WTON_ADDR_FILE | grep address | cut -c 15-80)
+
+
+# echo $ROOT_WTON_ADDR
+
+ISROOT=$($TONOS_CLI -u $NETWORK call $WTON_ADDR isRoot "{\"arg0\":\"$ROOT_ADDR\"}" --abi ./WTON/TONwrapper.abi.json | grep "value0" | cut -c 12-)
+echo Address: $ROOT_ADDR is Root 
+echo For WrappedTON $WTON_ADDR is: $ISROOT
+
 # echo ROOT_ADDR: $ROOT_ADDR
 
 # $TONOS_CLI -u $NETWORK account $ROOT_ADDR
 
 echo Deploy Root for WTON
-$TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+# $TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+
+
+if [ $NETWORK = "http://127.0.0.1" ]
+then
+    $TONOS_CLI -u $NETWORK call 0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94 sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+elif [ $NETWORK = "https://net.ton.dev" ]
+then
+    $TONOS_CLI -u $NETWORK call 0:2225d70ebde618b9c1e3650e603d6748ee6495854e7512dfc9c287349b4dc988 pay '{"addr":"'$ROOT_ADDR'"}' --abi ./giver.abi.json   
+fi
+
 echo RootWTON: $ROOT_ADDR
 
 

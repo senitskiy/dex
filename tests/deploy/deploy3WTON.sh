@@ -31,7 +31,9 @@ addressWTON=0x$ROOT_ADDR_COMPILE
 
 ROOT_WTON_ADDR_FILE="./RootWTON/address.json"
 ROOT_WTON_ADDR=$(cat $ROOT_WTON_ADDR_FILE | grep address | cut -c 15-80)
-echo $ROOT_WTON_ADDR
+# echo $ROOT_WTON_ADDR
+
+
 # cp TONwrapper.sol TONwrapperDone.sol
 
 # search="ROOT_WRAPPED_TON = address();"
@@ -51,7 +53,18 @@ ROOT_OWNER_ADDRESS=$ZERO_ADDRESS
 ROOT_CODE=$CODE
 TOTAL_SUPPLY="1000000" 
 
-$TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+# $TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+
+
+
+if [ $NETWORK = "http://127.0.0.1" ]
+then
+    $TONOS_CLI -u $NETWORK call 0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94 sendGrams "{\"dest\":\"$ROOT_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+elif [ $NETWORK = "https://net.ton.dev" ]
+then
+    $TONOS_CLI -u $NETWORK call 0:2225d70ebde618b9c1e3650e603d6748ee6495854e7512dfc9c287349b4dc988 pay '{"addr":"'$ROOT_ADDR'"}' --abi ./giver.abi.json   
+fi
+
 # ROOT_ADDR1=0:d3245095ffbbf9e39d922833a018b17553971af25ae39205198ec418c34aafa3
 
 # $TONOS_CLI -u $NETWORK call $GIVER sendGrams "{\"dest\":\"$ROOT_ADDR1\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
