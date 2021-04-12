@@ -4,7 +4,8 @@ const { Account } = require("@tonclient/appkit");
 const { Contract } = require("./DEXclientContract.js");
 const { RContract } = require("./RootTokenContract.js");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
+// const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
 
@@ -43,7 +44,9 @@ async function main(client) {
   console.log(btcprovide,' nano wBTC');
 
   const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
+  const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });

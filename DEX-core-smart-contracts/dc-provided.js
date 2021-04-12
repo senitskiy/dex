@@ -1,14 +1,19 @@
-const {TonClient, abiContract, signerKeys} = require("@tonclient/core");
 const { Account } = require("@tonclient/appkit");
 const { libNode } = require("@tonclient/lib-node");
 const { Contract } = require("./DEXclientContract.js");
 const { DPContract } = require("./DPContract.js");
 const { RContract } = require("./RootTokenContract.js");
 const hex2ascii = require('hex2ascii');
+
+
+const {
+  abiContract,
+  signerKeys,
+  TonClient,
+} = require("@tonclient/core");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
-const qtySwapA = 10000000000000;
-const pairTONxUSDT = JSON.parse(fs.readFileSync('./DEXpairTONxUSDT.json',{encoding: "utf8"})).address;
+// const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -17,13 +22,15 @@ async function logEvents(params, response_type) {
   console.log(`response_type = ${JSON.stringify(response_type, null, 2)}`);
 }
 
+
+
+
 async function main(client) {
   let response;
-  const contractJson = fs.readFileSync(pathJson,{encoding: "utf8"});
-  const contractData = JSON.parse(contractJson);
-  const contractAddress = contractData.address;
-  const contractKeys = contractData.keys;
+  const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
+  const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });
@@ -35,7 +42,7 @@ async function main(client) {
   console.log("All connected pairs:", pairs);
   for (const item of pairs) {
     response = await clientAcc.runLocal("getPair", {value0:item});
-    // console.log("Pair[0] info:", response.decoded.output);
+    // console.log("getPair:", response.decoded.output);
     let rootA = response.decoded.output.pairRootA;
     let rootB = response.decoded.output.pairRootB;
     let rootAccA = new Account(RContract, {address: rootA,client,});
@@ -47,19 +54,11 @@ async function main(client) {
     let symbolB = hex2ascii(response.decoded.output.value0)
     console.log("Pair symbolB:", symbolB);
     let pairAcc = new Account(DPContract, {address: item,client,});
-    response = await pairAcc.runLocal("getReservesBalance", {});
-    console.log("Pair reserves:", response.decoded.output);
-    let rateBA = Number(response.decoded.output.balanceReserveA)/Number(response.decoded.output.balanceReserveB);
-    let rateAB = Number(response.decoded.output.balanceReserveB)/Number(response.decoded.output.balanceReserveA);
-    console.log('1'+symbolA+' = '+rateAB+' '+symbolB);
-    console.log('1'+symbolB+' = '+rateBA+' '+symbolA);
+    response = await pairAcc.runLocal("getTotalSupply", {});
+    console.log("Pair total shares:", response.decoded.output);
+    response = await pairAcc.runLocal("getShareReserveProvider", {providerAddr:contractAddr});
+    console.log("Pair provider shares:", response.decoded.output);
   }
-
-  response = await clientAcc.run("makeAdepositToPair", {pairAddr:pairTONxUSDT,qtyA:qtySwapA});
-  console.log('Contract run makeAdepositToPair with output', response.decoded.output, response.transaction.id);
-  response = await clientAcc.run("processSwapA", {pairAddr:pairTONxUSDT,qtyA:qtySwapA});
-  console.log('Contract run processSwapA with output', response.decoded.output, response.transaction.id);
-
 }
 
 (async () => {

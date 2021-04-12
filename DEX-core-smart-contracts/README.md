@@ -1,4 +1,4 @@
-#DEX Solidity 38.2
+#DEX Solidity 0.40.0
 
 tonos-cli --url http://localhost run 0:ea325a8b3ce2c13fc206aba734aea64e27910b08d184de73dfe82301116d9c9c getZeroAddress {} --abi TONwrapper.abi.json
 tonos-cli --url http://localhost run 0:559e603761c55b65ab1ecab19074dcb3c748b90e76a9432c5e00cc630a1f374e getBalance {} --abi TONTokenWallet.abi.json

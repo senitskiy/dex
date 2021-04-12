@@ -4,17 +4,19 @@
     "description": "Radiance DEX core",
     "main": "",
     "scripts": {
-        "start": ""
+        "start": "index.js"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
         "@tonclient/appkit": "^0.1.0",
-        "@tonclient/core": "^1.10.2",
+        "@tonclient/core": "^1.12.0",
         "@tonclient/lib-node": "^1.10.2",
+        "@tonclient/lib-web": "^1.12.0",
         "ascii-hex": "^1.0.1",
         "coingecko-api": "^1.0.10",
+        "express": "^4.17.1",
         "hex2ascii": "^0.0.3"
     },
     "devDependencies": {

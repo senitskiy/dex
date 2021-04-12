@@ -5,15 +5,14 @@ const { DPContract } = require("./DPContract.js");
 const { RContract } = require("./RootTokenContract.js");
 const hex2ascii = require('hex2ascii');
 
-
 const {
   abiContract,
   signerKeys,
   TonClient,
 } = require("@tonclient/core");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
-
+// const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -22,16 +21,13 @@ async function logEvents(params, response_type) {
   console.log(`response_type = ${JSON.stringify(response_type, null, 2)}`);
 }
 
-
-
-
 async function main(client) {
   let response;
-  const contractJson = fs.readFileSync(pathJson,{encoding: "utf8"});
-  const contractData = JSON.parse(contractJson);
-  const contractAddress = contractData.address;
-  const contractKeys = contractData.keys;
+  const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
+  const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
+  console.log(contractAddr);
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });
@@ -54,10 +50,14 @@ async function main(client) {
     response = await rootAccB.runLocal("getSymbol", {});
     let symbolB = hex2ascii(response.decoded.output.value0)
     console.log("Pair symbolB:", symbolB);
+
+    response = await clientAcc.run("returnAllLiquidity", {pairAddr:item});
+    console.log('Contract run returnAllLiquidity fromPair with output', response.decoded.output, response.transaction.id);
+
     let pairAcc = new Account(DPContract, {address: item,client,});
     response = await pairAcc.runLocal("getTotalSupply", {});
     console.log("Pair total shares:", response.decoded.output);
-    response = await pairAcc.runLocal("getShareReserveProvider", {providerAddr:contractAddress});
+    response = await pairAcc.runLocal("getShareReserveProvider", {providerAddr:contractAddr});
     console.log("Pair provider shares:", response.decoded.output);
   }
 }

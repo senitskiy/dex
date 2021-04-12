@@ -3,7 +3,9 @@ const { libNode } = require("@tonclient/lib-node");
 const { Account } = require("@tonclient/appkit");
 const { Contract } = require("./DEXclientContract.js");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
+// const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
+
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -14,7 +16,10 @@ async function logEvents(params, response_type) {
 
 async function main(client) {
   const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
+  const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
+  console.log(contractAddr);
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });

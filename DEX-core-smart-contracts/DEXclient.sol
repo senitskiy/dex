@@ -1,58 +1,21 @@
 pragma ton-solidity ^0.40.0;
 pragma AbiHeader expire;
+pragma AbiHeader time;
+pragma AbiHeader pubkey;
 
-interface IRootTokenContract {
-	function deployEmptyWallet(uint32 _answer_id, int8 workchain_id, uint256 pubkey, uint256 internal_owner, uint128 grams) external functionID(0x0000000d) returns (address value0);
-}
-
-interface ITONTokenWallet {
-	function transfer(address dest, uint128 tokens, uint128 grams) external functionID(0x0000000c);
-	function getBalance_InternalOwner(uint32 _answer_id) external functionID(0x0000000d) returns (uint128 value0);
-}
-
-interface IDEXclient {
-	function setPair(address arg0, address arg1, address arg2, address arg3, address arg4, address arg5) external functionID(0x00000003);
-	function setBalanceToken(uint128 value0) external functionID(0x00000004);
-	function setNewEmptyWallet(address value0) external functionID(0x00000007);
-	function setPairDepositA(address arg0) external functionID(0x00000008);
-	function setPairDepositB(address arg0) external functionID(0x00000009);
-	function setWrapper(address arg0, address arg1) external functionID(0x00000089);
-	function callbackUnwrapTON(uint128 value0) external functionID(0x00000024);
-}
-
-interface IDEXpair {
-	function connect() external functionID(0x00000005);
-	function setPairDepositWallet(address value0) external functionID(0x0000000a);
-	function setWalletBalance(uint128 value0) external functionID(0x00000006);
-	function setPairReserveWallet(address value0) external functionID(0x0000000b);
-	function processLiquidity(uint128 qtyA, uint128 qtyB, address returnAddrA, address returnAddrB) external functionID(0x00000011);
-	function processSwapA(uint128 qtyA, address returnAddrA, address returnAddrB) external functionID(0x00000012);
-	function processSwapB(uint128 qtyB, address returnAddrA, address returnAddrB) external functionID(0x00000021);
-	function returnDeposit(address returnAddrA, address returnAddrB) external functionID(0x00000018);
-	function returnAllLiquidity() external functionID(0x00000019);
-}
-
-interface ITONWrapper {
-	function wrapGrams(address destination) external functionID(0x00000025);
-	function unwrapGrams() external functionID(0x00000052);
-	function setDepositWallet(address value0) external functionID(0x00000125);
-	function balanceDepositWallet(uint128 value0) external functionID(0x00000152);
-}
+import "./DEXinterfaces.sol";
 
 contract DEXclient is IDEXclient {
 
-	address ROOT_WRAPPED_TON;
-	address WRAPPER_TON;
+	address static public rootDEX;
+	address static public wTONroot;
+	address static public wTONwrapper;
 
-	// Wallet structure
-	struct Wallet {
-		uint256 index;
-		address root;
-		uint128 balance;
-	}
+	uint128 public test1;
+	uint128 public test2;
+	uint128 public test3;
 
-	mapping(address => Wallet) wallets;
-	address[] walletKeys;
+	mapping(address => address) wallets;
 
 	mapping(address => address) roots;
 	address[] rootKeys;
@@ -113,12 +76,10 @@ contract DEXclient is IDEXclient {
 	}
 
 	// Init function.
-	constructor(address wTONroot, address wTONwrapper) public {
-		require(tvm.pubkey() == msg.pubkey(), 102);
-		tvm.accept();
-		ROOT_WRAPPED_TON = wTONroot;
-		WRAPPER_TON = wTONwrapper;
-		createNewEmptyWallet(ROOT_WRAPPED_TON);
+	constructor() public {
+		require(msg.sender == rootDEX, 102);
+		createNewEmptyWallet(wTONroot);
+		test1 = msg.value;
 	}
 
 	// Function to transfers plain transfers.
@@ -166,6 +127,16 @@ contract DEXclient is IDEXclient {
 		}
 	}
 
+	// Function to create DEXpair by DEXclient via DEXroot.
+	function createNewPairByOwner(address root0, address root1, uint256 createId, uint128 grams) public checkOwnerAndAccept  returns (bool createStatus) {
+		test2 = address(this).balance;
+		createStatus = false;
+		TvmCell body = tvm.encodeBody(IDEXroot(rootDEX).createDEXpair, root0, root1, createId);
+		rootDEX.transfer({value:grams, bounce:false, body:body});
+		createStatus = true;
+		test3 = address(this).balance;
+	}
+
 	// Callback for new deployed wallet address setting.
 	function setNewEmptyWallet(address value0) public override alwaysAccept functionID(0x00000007){
 		address root = msg.sender;
@@ -173,12 +144,7 @@ contract DEXclient is IDEXclient {
 		if (!roots.exists(root)){
 			roots[root] = wallet;
 			rootKeys.push(root);
-			walletKeys.push(wallet);
-			Wallet wc = wallets[wallet];
-			wc.index = walletKeys.length;
-			wc.root = root;
-			wc.balance = 0;
-			wallets[wallet] = wc;
+			wallets[wallet] = root;
 		}
 	}
 
@@ -189,7 +155,7 @@ contract DEXclient is IDEXclient {
 
 	// Function to get DEXclient wallet for wrapped TON.
 	function getAddressWTON() public view alwaysAccept returns (address wallet) {
-		wallet = getWalletByRoot(ROOT_WRAPPED_TON);
+		wallet = getWalletByRoot(wTONroot);
 	}
 
 	// Callback for DEXpair to set connection data.
@@ -262,35 +228,6 @@ contract DEXclient is IDEXclient {
 		transmitter.transfer({value:GRAMS_SENDTOKENS_TRANSMITER, body:body});
 	}
 
-	// Function to ask wallet where DEXclient internal_owner for balance.
-	function askBalanceToken(address walletAddr) public pure checkOwnerAndAccept {
-		address transmitter = walletAddr;
-		TvmCell body = tvm.encodeBody(ITONTokenWallet(transmitter).getBalance_InternalOwner, 0x00000004);
-		transmitter.transfer({value:GRAMS_GET_BALANCE, body:body});
-	}
-
-	// Function to ask all wallets where DEXclient internal_owner for balance.
-	function askBalanceAllTokens() public view checkOwnerAndAccept {
-		uint128 count = 0;
-		repeat(walletKeys.length) {
-			askBalanceToken(walletKeys[count]);
-			count++;
-		}
-	}
-
-	// Callback from wallet where DEXclient internal_owner with balance value.
-	function setBalanceToken(uint128 value0) public alwaysAccept override functionID(0x00000004) {
-		Wallet wc = wallets[msg.sender];
-		wc.balance = value0;
-		wallets[msg.sender] = wc;
-	}
-
-	// Function to get wallet balance where DEXclient internal_owner after callbak came.
-	function getBalanceTokenWallet(address walletAddr) public view alwaysAccept returns (uint128 walletBal) {
-		Wallet wc = wallets[walletAddr];
-		walletBal = wc.balance;
-	}
-
 	// Function to get DEXclient wallets from same roots as DEXpair. DEXclient internal_owner of this wallets.
 	function getPairClientWallets(address pairAddr) public view alwaysAccept returns (address walletA, address walletB, address pairReturn){
 		Pair cp = pairs[pairAddr];
@@ -299,24 +236,10 @@ contract DEXclient is IDEXclient {
 		pairReturn = pairAddr;
 	}
 
-	// Function to ask from DEXclient balances of wallets from same roots as DEXpair. DEXclient internal_owner of this wallets.
-	function askPairWalletsBalance(address pairAddr) public view checkOwnerAndAccept {
-		Pair cp = pairs[pairAddr];
-		askBalanceToken(roots[cp.rootA]);
-		askBalanceToken(roots[cp.rootB]);
-	}
-
-	// Function to get DEXclient balances of wallets from same roots as DEXpair. First need execute askPairWalletsBalance.
-	function getPairWalletsBalance(address pairAddr) public view alwaysAccept returns (uint128 balanceWalletA, uint128 balanceWalletB) {
-		Pair cp = pairs[pairAddr];
-		balanceWalletA = getBalanceTokenWallet(roots[cp.rootA]);
-		balanceWalletB = getBalanceTokenWallet(roots[cp.rootB]);
-	}
-
 	// Function to get all connected pairs and created wallets of DEXclient.
-	function getAllDataPreparation() public view alwaysAccept returns(address[] pairKeysR, address[] walletKeysR){
+	function getAllDataPreparation() public view alwaysAccept returns(address[] pairKeysR, address[] rootKeysR){
 		pairKeysR = pairKeys;
-		walletKeysR = walletKeys;
+		rootKeysR = rootKeys;
 	}
 
 	// Function to get DEXclient address.
@@ -433,15 +356,15 @@ contract DEXclient is IDEXclient {
 	function wrapTON(uint128 qtyTONgrams) public view checkOwnerAndAccept returns (bool processWrapStatus) {
 		processWrapStatus = false;
 		require(!(qtyTONgrams > address(this).balance), 106);
-		TvmCell body = tvm.encodeBody(ITONWrapper(WRAPPER_TON).wrapGrams,roots[ROOT_WRAPPED_TON]);
-		WRAPPER_TON.transfer({value:qtyTONgrams, body:body});
+		TvmCell body = tvm.encodeBody(ITONWrapper(wTONwrapper).wrapGrams,roots[wTONroot]);
+		wTONwrapper.transfer({value:qtyTONgrams, body:body});
 		processWrapStatus = true;
 	}
 
 	// Function to unwrap TON.
 	function unwrapTON() public view checkOwnerAndAccept returns (bool processUnwrapStatus) {
 		processUnwrapStatus = false;
-		Wrapper cw = wrappers[WRAPPER_TON];
+		Wrapper cw = wrappers[wTONwrapper];
 		address transmitter = roots[cw.root];
 		TvmCell body = tvm.encodeBody(ITONTokenWallet(transmitter).getBalance_InternalOwner, 0x00000024);
 		transmitter.transfer({value:GRAMS_GET_BALANCE, body:body});
@@ -459,11 +382,11 @@ contract DEXclient is IDEXclient {
 	// Callback for unwrap TON.
 	function callbackUnwrapTON(uint128 value0) public onlyOwnerWallets override functionID(0x00000024) {
 		address clientWallet = msg.sender;
-		Wrapper cw = wrappers[WRAPPER_TON];
+		Wrapper cw = wrappers[wTONwrapper];
 		address wrapperDepositWallet = cw.depositWallet;
 		processTokens(clientWallet, wrapperDepositWallet, value0, GRAMS_SENDTOKENS_RECEIVER);
-		TvmCell body = tvm.encodeBody(ITONWrapper(WRAPPER_TON).unwrapGrams);
-		WRAPPER_TON.transfer({value:GRAMS_UNWRAP, body:body});
+		TvmCell body = tvm.encodeBody(ITONWrapper(wTONwrapper).unwrapGrams);
+		wTONwrapper.transfer({value:GRAMS_UNWRAP, body:body});
 	}
 
 }

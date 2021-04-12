@@ -1,0 +1,13 @@
+sudo /home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXpair.tvc > DEXpair.txt
+
+/home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXpair.tvc | grep code: | cut -c 8- > DEXpair.txt
+/home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXclient.tvc | grep code: | cut -c 8- > DEXclient.txt
+
+/home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXpair.tvc > DEXpair.txt
+/home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXclient.tvc > DEXclient.txt
+
+/home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXpair.tvc | grep code: | cut -c 8- > DEXpair.txt
+/home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXclient.tvc | grep code: | cut -c 8- > DEXclient.txt
+
+export DP_CODE=`cat DEXpair.txt`
+export DC_CODE=`cat DEXclient.txt`

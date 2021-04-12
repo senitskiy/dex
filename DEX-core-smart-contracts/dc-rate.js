@@ -1,15 +1,21 @@
-const {TonClient, abiContract, signerKeys} = require("@tonclient/core");
 const { Account } = require("@tonclient/appkit");
 const { libNode } = require("@tonclient/lib-node");
 const { Contract } = require("./DEXclientContract.js");
 const { DPContract } = require("./DPContract.js");
 const { RContract } = require("./RootTokenContract.js");
 const hex2ascii = require('hex2ascii');
+
+
+const {
+  abiContract,
+  signerKeys,
+  TonClient,
+} = require("@tonclient/core");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
-const qtySwapB = 1000000000000;
-const pairBTCxUSDT = JSON.parse(fs.readFileSync('./DEXpairBTCxUSDT.json',{encoding: "utf8"})).address;
-const pairETHxUSDT = JSON.parse(fs.readFileSync('./DEXpairETHxUSDT.json',{encoding: "utf8"})).address;
+// const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
+
+
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -18,13 +24,15 @@ async function logEvents(params, response_type) {
   console.log(`response_type = ${JSON.stringify(response_type, null, 2)}`);
 }
 
+
+
+
 async function main(client) {
   let response;
-  const contractJson = fs.readFileSync(pathJson,{encoding: "utf8"});
-  const contractData = JSON.parse(contractJson);
-  const contractAddress = contractData.address;
-  const contractKeys = contractData.keys;
+  const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
+  const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });
@@ -42,6 +50,7 @@ async function main(client) {
     let rootAccA = new Account(RContract, {address: rootA,client,});
     response = await rootAccA.runLocal("getSymbol", {});
     let symbolA = hex2ascii(response.decoded.output.value0)
+    console.log('====================');
     console.log("Pair symbolA:", symbolA);
     let rootAccB = new Account(RContract, {address: rootB,client,});
     response = await rootAccB.runLocal("getSymbol", {});
@@ -55,16 +64,6 @@ async function main(client) {
     console.log('1'+symbolA+' = '+rateAB+' '+symbolB);
     console.log('1'+symbolB+' = '+rateBA+' '+symbolA);
   }
-
-  response = await clientAcc.run("makeBdepositToPair", {pairAddr:pairBTCxUSDT,qtyB:qtySwapB});
-  console.log('Contract run makeBdepositToPair with output', response.decoded.output, response.transaction.id);
-  response = await clientAcc.run("processSwapB", {pairAddr:pairBTCxUSDT,qtyB:qtySwapB});
-  console.log('Contract run processSwapB with output', response.decoded.output, response.transaction.id);
-
-  response = await clientAcc.run("makeBdepositToPair", {pairAddr:pairETHxUSDT,qtyB:qtySwapB});
-  console.log('Contract run makeBdepositToPair with output', response.decoded.output, response.transaction.id);
-  response = await clientAcc.run("processSwapB", {pairAddr:pairETHxUSDT,qtyB:qtySwapB});
-  console.log('Contract run processSwapB with output', response.decoded.output, response.transaction.id);
 
 
 }
