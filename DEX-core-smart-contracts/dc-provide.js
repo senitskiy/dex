@@ -4,7 +4,9 @@ const { Account } = require("@tonclient/appkit");
 const { Contract } = require("./DEXclientContract.js");
 const { TTWContract } = require("./TONTokenWalletContract.js");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
+// const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
+
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -18,6 +20,7 @@ async function main(client) {
   const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
   const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });
@@ -78,15 +81,15 @@ async function main(client) {
 
   // Call `processLiquidity` function
   response = await clientAcc.run("processLiquidity", {pairAddr:pairTONxUSDT,qtyA:provideTON[0],qtyB:provideUSDT[0]});
-  console.log('Contract run makeABdepositToPair with output', response.decoded.output, response.transaction.id);
+  console.log('Contract run processLiquidity with output', response.decoded.output, response.transaction.id);
   response = await clientAcc.run("processLiquidity", {pairAddr:pairTONxBTC,qtyA:provideTON[1],qtyB:provideBTC[0]});
-  console.log('Contract run makeABdepositToPair with output', response.decoded.output, response.transaction.id);
+  console.log('Contract run processLiquidity with output', response.decoded.output, response.transaction.id);
   response = await clientAcc.run("processLiquidity", {pairAddr:pairTONxETH,qtyA:provideTON[2],qtyB:provideETH[0]});
-  console.log('Contract run makeABdepositToPair with output', response.decoded.output, response.transaction.id);
+  console.log('Contract run processLiquidity with output', response.decoded.output, response.transaction.id);
   response = await clientAcc.run("processLiquidity", {pairAddr:pairBTCxUSDT,qtyA:provideBTC[1],qtyB:provideUSDT[1]});
-  console.log('Contract run makeABdepositToPair with output', response.decoded.output, response.transaction.id);
+  console.log('Contract run processLiquidity with output', response.decoded.output, response.transaction.id);
   response = await clientAcc.run("processLiquidity", {pairAddr:pairETHxUSDT,qtyA:provideETH[1],qtyB:provideUSDT[2]});
-  console.log('Contract run makeABdepositToPair with output', response.decoded.output, response.transaction.id);
+  console.log('Contract run processLiquidity with output', response.decoded.output, response.transaction.id);
 
 
 

@@ -1,19 +1,16 @@
+const {TonClient, abiContract, signerKeys} = require("@tonclient/core");
 const { Account } = require("@tonclient/appkit");
 const { libNode } = require("@tonclient/lib-node");
 const { Contract } = require("./DEXclientContract.js");
 const { DPContract } = require("./DPContract.js");
 const { RContract } = require("./RootTokenContract.js");
 const hex2ascii = require('hex2ascii');
-
-
-const {
-  abiContract,
-  signerKeys,
-  TonClient,
-} = require("@tonclient/core");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
+// const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
 
+const qtySwapA = 10000000000000;
+const pairTONxUSDT = JSON.parse(fs.readFileSync('./DEXpairTONxUSDT.json',{encoding: "utf8"})).address;
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -22,16 +19,13 @@ async function logEvents(params, response_type) {
   console.log(`response_type = ${JSON.stringify(response_type, null, 2)}`);
 }
 
-
-
-
 async function main(client) {
   let response;
-  const contractJson = fs.readFileSync(pathJson,{encoding: "utf8"});
-  const contractData = JSON.parse(contractJson);
-  const contractAddress = contractData.address;
-  const contractKeys = contractData.keys;
+  const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
+  const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
+  console.log(contractAddr);
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });
@@ -62,6 +56,12 @@ async function main(client) {
     console.log('1'+symbolA+' = '+rateAB+' '+symbolB);
     console.log('1'+symbolB+' = '+rateBA+' '+symbolA);
   }
+
+  response = await clientAcc.run("makeAdepositToPair", {pairAddr:pairTONxUSDT,qtyA:qtySwapA});
+  console.log('Contract run makeAdepositToPair with output', response.decoded.output, response.transaction.id);
+  response = await clientAcc.run("processSwapA", {pairAddr:pairTONxUSDT,qtyA:qtySwapA});
+  console.log('Contract run processSwapA with output', response.decoded.output, response.transaction.id);
+
 }
 
 (async () => {

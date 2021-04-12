@@ -1,9 +1,9 @@
 const {TonClient, abiContract, signerKeys} = require("@tonclient/core");
 const { libNode } = require("@tonclient/lib-node");
 const { Account } = require("@tonclient/appkit");
-const { Contract } = require("./DEXclientContract.js");
+const { Contract } = require("./DEXrootContract.js");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
+const pathJson = './DEXrootContract.json';
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -26,7 +26,7 @@ async function main(client) {
   console.log('wTONwrapper ',wTONwrapper);
 
   const giver = await Account.getGiverForClient(client);
-  await giver.sendTo(address, 100_000_000_000);
+  await giver.sendTo(address, 100_000_000_000_000);
   console.log(`Grams were transferred from giver to ${address}`);
 
   let contractJson = JSON.stringify({address:address, keys:contractKeys});
@@ -70,22 +70,27 @@ logEvents,
 // console.log(`Deploy fees: ${JSON.stringify(deploy_processing_result.fees, null, 2)}`);
 console.log(`Contract was deployed at address: ${address}`);
 
-// Call `touch` function
-// let response = await clientAcc.run("touch", {});
-//
-// console.log(`Contract run transaction with output ${response.decoded.output}, ${response.transaction.id}`);
+// console.log('Contract.codeDC: ',Contract.codeDC);
+// console.log('Contract.codeDP: ',Contract.codeDP);
 
-// Execute `showContractAddress` get method  (execute the message locally on TVM)
-response = await clientAcc.runLocal("showContractAddress", {});
-console.log("Contract reacted to your showContractAddress:", response.decoded.output);
 
-// Execute `getAllDataPreparation` get method  (execute the message locally on TVM)
-response = await clientAcc.runLocal("getAllDataPreparation", {});
-console.log("Contract reacted to your getAllDataPreparation:", response.decoded.output);
+// Call `setDEXclientCode` function
+let response = await clientAcc.run("setDEXclientCode", {code:Contract.codeDC});
+console.log("Contract reacted to your setDEXclientCode:", response.decoded.output);
 
-// Execute `getAddressWTON` get method  (execute the message locally on TVM)
-response = await clientAcc.runLocal("getAddressWTON", {});
-console.log("Contract reacted to your getAddressWTON:", response.decoded.output);
+// Call `setDEXpairCode` function
+response = await clientAcc.run("setDEXpairCode", {code:Contract.codeDP});
+console.log("Contract reacted to your setDEXpairCode:", response.decoded.output);
+
+
+// Execute `codeDEXclient` get method  (execute the message locally on TVM)
+// response = await clientAcc.runLocal("codeDEXclient", {});
+// console.log("Contract reacted to your codeDEXclient:", response.decoded.output);
+
+// Execute `codeDEXpair` get method  (execute the message locally on TVM)
+// response = await clientAcc.runLocal("codeDEXpair", {});
+// console.log("Contract reacted to your codeDEXpair:", response.decoded.output);
+
 
 
 }

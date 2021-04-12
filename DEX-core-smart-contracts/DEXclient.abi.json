@@ -1,12 +1,10 @@
 {
 	"ABI version": 2,
-	"header": ["time", "expire"],
+	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"wTONroot","type":"address"},
-				{"name":"wTONwrapper","type":"address"}
 			],
 			"outputs": [
 			]
@@ -34,6 +32,18 @@
 			"name": "createNewEmptyWalletByOwner",
 			"inputs": [
 				{"name":"rootAddr","type":"address"}
+			],
+			"outputs": [
+				{"name":"createStatus","type":"bool"}
+			]
+		},
+		{
+			"name": "createNewPairByOwner",
+			"inputs": [
+				{"name":"root0","type":"address"},
+				{"name":"root1","type":"address"},
+				{"name":"createId","type":"uint256"},
+				{"name":"grams","type":"uint128"}
 			],
 			"outputs": [
 				{"name":"createStatus","type":"bool"}
@@ -153,39 +163,6 @@
 			]
 		},
 		{
-			"name": "askBalanceToken",
-			"inputs": [
-				{"name":"walletAddr","type":"address"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "askBalanceAllTokens",
-			"inputs": [
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "setBalanceToken",
-			"id": "0x4",
-			"inputs": [
-				{"name":"value0","type":"uint128"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "getBalanceTokenWallet",
-			"inputs": [
-				{"name":"walletAddr","type":"address"}
-			],
-			"outputs": [
-				{"name":"walletBal","type":"uint128"}
-			]
-		},
-		{
 			"name": "getPairClientWallets",
 			"inputs": [
 				{"name":"pairAddr","type":"address"}
@@ -197,30 +174,12 @@
 			]
 		},
 		{
-			"name": "askPairWalletsBalance",
-			"inputs": [
-				{"name":"pairAddr","type":"address"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "getPairWalletsBalance",
-			"inputs": [
-				{"name":"pairAddr","type":"address"}
-			],
-			"outputs": [
-				{"name":"balanceWalletA","type":"uint128"},
-				{"name":"balanceWalletB","type":"uint128"}
-			]
-		},
-		{
 			"name": "getAllDataPreparation",
 			"inputs": [
 			],
 			"outputs": [
 				{"name":"pairKeysR","type":"address[]"},
-				{"name":"walletKeysR","type":"address[]"}
+				{"name":"rootKeysR","type":"address[]"}
 			]
 		},
 		{
@@ -355,9 +314,60 @@
 			],
 			"outputs": [
 			]
+		},
+		{
+			"name": "rootDEX",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"rootDEX","type":"address"}
+			]
+		},
+		{
+			"name": "wTONroot",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"wTONroot","type":"address"}
+			]
+		},
+		{
+			"name": "wTONwrapper",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"wTONwrapper","type":"address"}
+			]
+		},
+		{
+			"name": "test1",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"test1","type":"uint128"}
+			]
+		},
+		{
+			"name": "test2",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"test2","type":"uint128"}
+			]
+		},
+		{
+			"name": "test3",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"test3","type":"uint128"}
+			]
 		}
 	],
 	"data": [
+		{"key":1,"name":"rootDEX","type":"address"},
+		{"key":2,"name":"wTONroot","type":"address"},
+		{"key":3,"name":"wTONwrapper","type":"address"}
 	],
 	"events": [
 	]

@@ -1,23 +1,25 @@
 {
-    "name": "Radiance DEX core",
-    "version": "0.2.0",
-    "description": "Radiance DEX core",
-    "main": "",
-    "scripts": {
-        "start": ""
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "@tonclient/appkit": "^0.1.0",
-        "@tonclient/core": "^1.10.2",
-        "@tonclient/lib-node": "^1.10.2",
-        "ascii-hex": "^1.0.1",
-        "coingecko-api": "^1.0.10",
-        "hex2ascii": "^0.0.3"
-    },
-    "devDependencies": {
-        "@types/node": "^14.14.31"
-    }
+  "name": "radiance-dex-core",
+  "version": "1.1.0",
+  "description": "radiance dex-core-smartcontracts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/radianceteam/dex2/tree/main/DEX-core-smart-contracts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tonclient/appkit": "^0.2.0",
+    "@tonclient/core": "^1.12.0",
+    "@tonclient/lib-node": "^1.12.0",
+    "@tonclient/lib-web": "^1.12.0",
+    "ascii-hex": "^1.0.1",
+    "coingecko-api": "^1.0.10",
+    "express": "^4.17.1",
+    "hex2ascii": "0.0.3"
+  }
 }

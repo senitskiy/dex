@@ -1,40 +1,14 @@
 pragma ton-solidity ^0.40.0;
 pragma AbiHeader expire;
+pragma AbiHeader time;
+pragma AbiHeader pubkey;
 
-interface IRootTokenContract {
-	function deployEmptyWallet(uint32 _answer_id, int8 workchain_id, uint256 pubkey, uint256 internal_owner, uint128 grams) external functionID(0x0000000d) returns (address value0);
-}
-
-interface ITONTokenWallet {
-	function transfer(address dest, uint128 tokens, uint128 grams) external functionID(0x0000000c);
-	function getBalance_InternalOwner(uint32 _answer_id) external functionID(0x0000000d) returns (uint128 value0);
-}
-
-interface IDEXclient {
-	function setPair(address arg0, address arg1, address arg2, address arg3, address arg4, address arg5) external functionID(0x00000003);
-	function setWalletBalance(uint128 value0) external functionID(0x00000004);
-	function setPairDepositA(address arg0) external functionID(0x00000008);
-	function setPairDepositB(address arg0) external functionID(0x00000009);
-}
-
-interface IDEXpair {
-	function connect() external functionID(0x00000005);
-	function setPairDepositWallet(address value0) external functionID(0x0000000a);
-	function setPairReserveWallet(address value0) external functionID(0x0000000b);
-	function processLiquidity(uint128 qtyA, uint128 qtyB, address returnAddrA, address returnAddrB) external functionID(0x00000011);
-	function responceClientBalanceA(uint128 value0) external functionID(0x00000016);
-	function responceClientBalanceB(uint128 value0) external functionID(0x00000026);
-	function processSwapA(uint128 qtyA, address returnAddrA, address returnAddrB) external functionID(0x00000012);
-	function processSwapB(uint128 qtyB, address returnAddrA, address returnAddrB) external functionID(0x00000021);
-	function returnDeposit(address returnAddrA, address returnAddrB) external functionID(0x00000018);
-	function returnClientDepositA(uint128 value0) external functionID(0x00000036);
-	function returnClientDepositB(uint128 value0) external functionID(0x00000046);
-	function swapA(uint128 value0) external functionID(0x00000056);
-	function swapB(uint128 value0) external functionID(0x00000066);
-	function returnAllLiquidity() external functionID(0x00000019);
-}
+import "./DEXinterfaces.sol";
 
 contract DEXpair is IDEXpair {
+
+	address static public rootDEX;
+	uint256 static public pairID;
 
 	// Pair data
 	address rootA;
@@ -131,7 +105,7 @@ contract DEXpair is IDEXpair {
 
 	// Init function.
 	constructor(address root0, address root1) public {
-		require(tvm.pubkey() == msg.pubkey(), 102);
+		require(msg.sender == rootDEX, 102);
 		tvm.accept();
 		setPairRoots(root0, root1);
 		initStatusA = false;
@@ -220,7 +194,6 @@ contract DEXpair is IDEXpair {
 		receiver = to;
 		ITONTokenWallet(transmitter).transfer{value:GRAMS_SENDTOKENS_TRANSMITER}(receiver, tokens, grams);
 	}
-
 
 	// Function to get last DEX client in queue for creating empty deposit walletA.
 	function getLastQueueA() private view returns (uint128) {

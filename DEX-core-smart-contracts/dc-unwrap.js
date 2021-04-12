@@ -4,7 +4,9 @@ const { Account } = require("@tonclient/appkit");
 const { Contract } = require("./DEXclientContract.js");
 const { TTWContract } = require("./TONTokenWalletContract.js");
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
+// const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
+
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -16,7 +18,9 @@ async function logEvents(params, response_type) {
 async function main(client) {
   const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
   const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
+  console.log(contractAddr);
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });
@@ -40,13 +44,10 @@ async function main(client) {
   response = await walletAcc.runLocal("getBalance", {});
   console.log("Contract reacted to your getBalance:", response.decoded.output);
 
-  let ton = 30000000000000000;
-  let fee = 1399000;
-  let tonprovide = ton + fee;
-
-  const giver = await Account.getGiverForClient(client);
-  await giver.sendTo(contractAddr, 30_000_000_000_000_000);
-  console.log(`Grams were transferred from giver to ${contractAddr}`);
+  // let tonprovide = 30000000000000000;
+  // const giver = await Account.getGiverForClient(client);
+  // await giver.sendTo(contractAddr, 30_000_000_000_000_000);
+  // console.log(`Grams were transferred from giver to ${contractAddr}`);
 
   // Execute `getBalanceTONgrams` get method  (execute the message locally on TVM)
   // response = await clientAcc.runLocal("getBalanceTONgrams", {});
@@ -56,9 +57,9 @@ async function main(client) {
   // response = await walletAcc.runLocal("getBalance", {});
   // console.log("Contract reacted to your getBalance:", response.decoded.output);
 
-  // Call `wrapTON` function
-  response = await clientAcc.run("wrapTON", {qtyTONgrams:tonprovide});
-  console.log('Contract run wrapTON with output', response.decoded.output, response.transaction.id);
+  // Call `unwrapTON` function
+  response = await clientAcc.run("unwrapTON", {});
+  console.log('Contract run unwrapTON with output', response.decoded.output, response.transaction.id);
 
   // Execute `getBalanceTONgrams` get method  (execute the message locally on TVM)
   // response = await clientAcc.runLocal("getBalanceTONgrams", {});

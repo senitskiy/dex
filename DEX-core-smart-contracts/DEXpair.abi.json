@@ -1,6 +1,6 @@
 {
 	"ABI version": 2,
-	"header": ["time", "expire"],
+	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
 			"name": "constructor",
@@ -339,9 +339,27 @@
 			"outputs": [
 				{"name":"balanceTONgrams","type":"uint128"}
 			]
+		},
+		{
+			"name": "rootDEX",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"rootDEX","type":"address"}
+			]
+		},
+		{
+			"name": "pairID",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"pairID","type":"uint256"}
+			]
 		}
 	],
 	"data": [
+		{"key":1,"name":"rootDEX","type":"address"},
+		{"key":2,"name":"pairID","type":"uint256"}
 	],
 	"events": [
 	]
