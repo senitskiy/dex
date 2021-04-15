@@ -1,8 +1,3 @@
-sudo /home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXpair.tvc > DEXpair.txt
-
-/home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXpair.tvc | grep code: | cut -c 8- > DEXpair.txt
-/home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXclient.tvc | grep code: | cut -c 8- > DEXclient.txt
-
 /home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXpair.tvc > DEXpair.txt
 /home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXclient.tvc > DEXclient.txt
 
@@ -11,3 +6,9 @@ sudo /home/yaroslav/TVM-linker/tvm_linker decode --tvc DEXpair.tvc > DEXpair.txt
 
 export DP_CODE=`cat DEXpair.txt`
 export DC_CODE=`cat DEXclient.txt`
+
+tondev js wrap RootTokenContract.abi.json -o RootToken.js
+tondev js wrap TONTokenWallet.abi.json -o TONTokenWallet.js
+tondev js wrap DEXroot.abi.json -o RootToken.js
+tondev js wrap DEXclient.abi.json -o DEXclient.js
+tondev js wrap DEXpair.abi.json -o DEXpair.js

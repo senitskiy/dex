@@ -5,6 +5,10 @@ const { Contract } = require("./DEXclientContract.js");
 const fs = require('fs');
 // const pathJson = './DEXclientContract.json';
 const pathJson = './DEXsetKeys.json';
+const networks = ["http://localhost",'net.ton.dev','main.ton.dev'];
+const hello = ["Hello localhost TON!","Hello devnet TON!","Hello maitnet TON!"];
+const networkSelector = 1;
+
 
 
 
@@ -22,9 +26,9 @@ async function main(client) {
     client,
   });
 
-  const giver = await Account.getGiverForClient(client);
-  await giver.sendTo(contractAddr, 60_000_000_000);
-  console.log(`Grams were transferred from giver to ${contractAddr}`);
+  // const giver = await Account.getGiverForClient(client);
+  // await giver.sendTo(contractAddr, 60_000_000_000);
+  // console.log(`Grams were transferred from giver to ${contractAddr}`);
 
 
   let pairsArr = JSON.parse(fs.readFileSync('./DEXsetPairs.json',{encoding: "utf8"})).pairsArr;
@@ -107,25 +111,17 @@ async function main(client) {
 }
 
 (async () => {
-    const client = new TonClient({
-        network: {
-            // Local TON OS SE instance URL here
-            endpoints: ["http://localhost"],
-        },
-    });
-    try {
-        console.log("Hello localhost TON!");
-        await main(client);
-        process.exit(0);
-    } catch (error) {
-        if (error.code === 504) {
-            console.error(`
-Network is inaccessible.
-You have to start TON OS SE using \`tondev se start\`
-`);
-        } else {
-            console.error(error);
-        }
+  const client = new TonClient({network: { endpoints: [networks[networkSelector]],},});
+  try {
+    console.log(hello[networkSelector]);
+    await main(client);
+    process.exit(0);
+  } catch (error) {
+    if (error.code === 504) {
+      console.error(`Network is inaccessible. Pls check connection`);
+    } else {
+      console.error(error);
     }
-    client.close();
+  }
+  client.close();
 })();

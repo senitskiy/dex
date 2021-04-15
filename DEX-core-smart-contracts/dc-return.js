@@ -1,18 +1,15 @@
+const {TonClient, abiContract, signerKeys} = require("@tonclient/core");
 const { Account } = require("@tonclient/appkit");
 const { libNode } = require("@tonclient/lib-node");
 const { Contract } = require("./DEXclientContract.js");
 const { DPContract } = require("./DPContract.js");
 const { RContract } = require("./RootTokenContract.js");
 const hex2ascii = require('hex2ascii');
-
-
-const {
-  abiContract,
-  signerKeys,
-  TonClient,
-} = require("@tonclient/core");
+const networks = ["http://localhost",'net.ton.dev','main.ton.dev'];
+const hello = ["Hello localhost TON!","Hello devnet TON!","Hello maitnet TON!"];
+const networkSelector = 1;
 const fs = require('fs');
-const pathJson = './DEXclientContract.json';
+const pathJson = './DEXsetKeys.json';
 
 
 TonClient.useBinaryLibrary(libNode);
@@ -27,11 +24,11 @@ async function logEvents(params, response_type) {
 
 async function main(client) {
   let response;
-  const contractJson = fs.readFileSync(pathJson,{encoding: "utf8"});
-  const contractData = JSON.parse(contractJson);
-  const contractAddress = contractData.address;
-  const contractKeys = contractData.keys;
+  const contractKeys = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).keys;
+  const contractAddr = JSON.parse(fs.readFileSync(pathJson,{encoding: "utf8"})).address;
+  console.log(contractAddr);
   const clientAcc = new Account(Contract, {
+    address: contractAddr,
     signer: contractKeys,
     client,
   });
@@ -61,31 +58,23 @@ async function main(client) {
     let pairAcc = new Account(DPContract, {address: item,client,});
     response = await pairAcc.runLocal("getTotalSupply", {});
     console.log("Pair total shares:", response.decoded.output);
-    response = await pairAcc.runLocal("getShareReserveProvider", {providerAddr:contractAddress});
+    response = await pairAcc.runLocal("getShareReserveProvider", {providerAddr:contractAddr});
     console.log("Pair provider shares:", response.decoded.output);
   }
 }
 
 (async () => {
-  const client = new TonClient({
-    network: {
-      // Local TON OS SE instance URL here
-      endpoints: ["http://localhost"],
-    },
-  });
+  const client = new TonClient({network: { endpoints: [networks[networkSelector]],},});
   try {
-    console.log("Hello localhost TON!");
+    console.log(hello[networkSelector]);
     await main(client);
     process.exit(0);
   } catch (error) {
     if (error.code === 504) {
-      console.error(`
-        Network is inaccessible.
-        You have to start TON OS SE using \`tondev se start\`
-        `);
-      } else {
-        console.error(error);
-      }
+      console.error(`Network is inaccessible. Pls check connection`);
+    } else {
+      console.error(error);
     }
-    client.close();
-  })();
+  }
+  client.close();
+})();

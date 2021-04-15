@@ -3,6 +3,11 @@ const { libNode } = require("@tonclient/lib-node");
 const { Account } = require("@tonclient/appkit");
 const { RContract } = require("./RootTokenContract.js");
 const { TTWContract } = require("./TONTokenWalletContract.js");
+const { GiverContract } = require("./GiverContract.js");
+const networks = ["http://localhost",'net.ton.dev','main.ton.dev'];
+const hello = ["Hello localhost TON!","Hello devnet TON!","Hello maitnet TON!"];
+const networkSelector = 1;
+
 const fs = require('fs');
 const hex = require('ascii-hex');
 const pathJsonR = './wETHContract.json';
@@ -40,9 +45,25 @@ async function main(client) {
     const rootAddr = await rootAcc.getAddress();
     console.log(`Future address of the rootToken will be: ${rootAddr}`);
 
-    const giver = await Account.getGiverForClient(client);
-    await giver.sendTo(rootAddr, 100_000_000_000);
-    console.log(`Grams were transferred from giver to ${rootAddr}`);
+    if (networkSelector == 0) {
+      const giver = await Account.getGiverForClient(client);
+      await giver.sendTo(rootAddr, 100_000_000_000);
+      console.log(`Grams were transferred from giver to ${rootAddr}`);
+      await giver.sendTo(wrapperAddr, 100_000_000_000);
+      console.log(`Grams were transferred from giver to ${wrapperAddr}`);
+    } else if (networkSelector == 1) {
+      const giverNTDAddress = JSON.parse(fs.readFileSync('./GiverContractNTD.json',{encoding: "utf8"})).address;;
+      const giverNTDKeys = JSON.parse(fs.readFileSync('./GiverContractNTD.json',{encoding: "utf8"})).keys;
+      const giverNTDAcc = new Account(GiverContract, {
+        address: giverNTDAddress,
+        signer: giverNTDKeys,
+        client,
+      });
+      // Call `sendTransaction` function
+      response = await giverNTDAcc.run("sendTransaction", {dest:rootAddr,value:20000000000,bounce:false});
+      console.log("Giver send 20 ton to rootAddr:", response.decoded.output);
+    } else if (networkSelector == 2){console.log('Pls set giver for main.ton.dev');} else {console.log('networkSelector is incorrect');}
+
 
     let rootJson = JSON.stringify({address:rootAddr, keys:rootKeys});
     fs.writeFileSync( pathJsonR, rootJson,{flag:'w'});
@@ -66,7 +87,7 @@ async function main(client) {
             send_events: true,
         }, logEvents,
     )).shard_block_id;
-    console.log(`Deploy rootWrappedUSDT message was sent.`);
+    console.log(`Deploy rootWrappedETH message was sent.`);
 
     // Monitor message delivery.
     // See more info about `wait_for_transaction` here
@@ -104,25 +125,17 @@ async function main(client) {
 }
 
 (async () => {
-    const client = new TonClient({
-        network: {
-            // Local TON OS SE instance URL here
-            endpoints: ["http://localhost"],
-        },
-    });
-    try {
-        console.log("Hello localhost TON!");
-        await main(client);
-        process.exit(0);
-    } catch (error) {
-        if (error.code === 504) {
-            console.error(`
-Network is inaccessible.
-You have to start TON OS SE using \`tondev se start\`
-`);
-        } else {
-            console.error(error);
-        }
+  const client = new TonClient({network: { endpoints: [networks[networkSelector]],},});
+  try {
+    console.log(hello[networkSelector]);
+    await main(client);
+    process.exit(0);
+  } catch (error) {
+    if (error.code === 504) {
+      console.error(`Network is inaccessible. Pls check connection`);
+    } else {
+      console.error(error);
     }
-    client.close();
+  }
+  client.close();
 })();
