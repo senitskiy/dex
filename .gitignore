@@ -103,20 +103,10 @@ dist
 # TernJS port file
 .tern-port
 
-/DEX-clients/DEX-client*
-/tokens-fungible/
+
 /ignor/
-/DEX-clients/old*
-/DEXclient/DEX-client*
-/DEX-pair/
-/DEXclient/DEX-client-*
+
 workspace.code-workspace
-DEXclient/DEXpairContractUSDT.json
-DEXclient/DEXpairContractBTC-USDT.json
-DEXclient/DEXpairContractETH-BTC.json
-DEXclient/DEXpairContractWTON-BTC.json
-DEXclient/DEXpairContractWTON-ETH.json
-DEXclient/DEXpairContractWTON-USDT.json
 
 DEXrootAndWalletcompile/node_modules/node_modules /
 DEXrootAndWalletcompile/node_modules/
@@ -130,3 +120,4 @@ DEXrootAndWalletcompile/tonos-cli.conf.json
 DEXrootAndWalletcompile/.log
 DEXrootAndWalletcompile/tokens/RootToken*
 
+tests/addrsAndKeys/

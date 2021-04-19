@@ -7,7 +7,7 @@ TONOS_CLI=$(./configes/get_tonos_cli.sh)
 CURRENT_DIR=$(./configes/get_current_dir.sh)
 
 
-AMOUNT_TONS=100000000000
+# AMOUNT_TONS=100000000000
 # GIVER="0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94"
 # CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/RootTokenContract.tvc  | grep code: | cut -c 8-)
 # CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/RootTokenContract.tvc | grep code: | cut -c 8-)
@@ -80,7 +80,7 @@ SEED_PHRASE=$($TONOS_CLI -u $NETWORK genphrase | grep phrase | cut -c 14-110 ) #
 # $TONOS_CLI -u $NETWORK getkeypair $CURRENT_DIR/RootA/deploy.keys.json $SEED_PHRASE #"there screen toddler confirm spring future grief loan wait ready accuse card" # $SEED_PHRASE #| grep Succeeded | cut -c 1-15
 # tonos-cli getkeypair ./addrsAndKeys/RootA/deploy.keys.json "age rescue knock load gaze erupt zoo elevator romance basic polar august" | grep Succeeded | cut -c 1-15
 
-WTON_ADDR=$($TONOS_CLI -u $NETWORK genaddr ./WTON/TONwrapper.tvc ./WTON/TONwrapper.abi.json --genkey $CURRENT_DIR/WTON/deploy.keys.json --wc 0 | grep "Raw address:" | cut -c 14-)
+WTON_ADDR=$($TONOS_CLI -u $NETWORK genaddr ../$CONTRACTS/TONwrapper.tvc ../$CONTRACTS/TONwrapper.abi.json --genkey $CURRENT_DIR/WTON/deploy.keys.json --wc 0 | grep "Raw address:" | cut -c 14-)
 # tonos-cli genaddr ../DEXrootAndWalletcompile/RootTokenContract.tvc ../DEXrootAndWalletcompile/RootTokenContract.abi.json --genkey ./addrsAndKeys/2021-04-12-150601/RootA/deploy.keys.json --wc 0
 echo { \"address\": \"$WTON_ADDR\"} > $CURRENT_DIR/WTON/address.json
 
@@ -104,7 +104,7 @@ echo Waiting. Transaction from Giver...
 
 if [ $NETWORK = "http://127.0.0.1" ]
 then
-    $TONOS_CLI -u $NETWORK call 0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94 sendGrams "{\"dest\":\"$WTON_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+    GIVER_RESULT=$($TONOS_CLI -u $NETWORK call 0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94 sendGrams "{\"dest\":\"$WTON_ADDR\",\"amount\":\"100000000000\"}" --abi ./local_giver.abi.json | grep "Succeeded" | cut -c 1-)
 elif [ $NETWORK = "https://net.ton.dev" ]
 then
     GIVER_RESULT=$($TONOS_CLI -u $NETWORK call 0:2225d70ebde618b9c1e3650e603d6748ee6495854e7512dfc9c287349b4dc988 pay '{"addr":"'$WTON_ADDR'"}' --abi ./giver.abi.json  | grep "Succeeded" | cut -c 1-)
@@ -119,7 +119,7 @@ echo Waiting. Transaction from Giver...
 
 if [ $NETWORK = "http://127.0.0.1" ]
 then
-    $TONOS_CLI -u $NETWORK call 0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94 sendGrams "{\"dest\":\"$ROOT_WTON_ADDR\",\"amount\":\"$AMOUNT_TONS\"}" --abi ./local_giver.abi.json > /dev/null
+    GIVER_RESULT=$($TONOS_CLI -u $NETWORK call 0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94 sendGrams "{\"dest\":\"$ROOT_WTON_ADDR\",\"amount\":\"100000000000\"}" --abi ./local_giver.abi.json | grep "Succeeded" | cut -c 1-)
 elif [ $NETWORK = "https://net.ton.dev" ]
 then
     GIVER_RESULT=$($TONOS_CLI -u $NETWORK call 0:2225d70ebde618b9c1e3650e603d6748ee6495854e7512dfc9c287349b4dc988 pay '{"addr":"'$ROOT_WTON_ADDR'"}' --abi ./giver.abi.json  | grep "Succeeded" | cut -c 1-)
@@ -179,7 +179,7 @@ echo ROOT WTON ADDR: $ROOT_WTON_ADDR
 
 echo Waiting. Deploy Root from Blockchain...
 
-RESULT_DEPLOY=$($TONOS_CLI -u $NETWORK deploy --abi ./WTON/TONwrapper.abi.json --sign $CURRENT_DIR/WTON/deploy.keys.json ./WTON/TONwrapper.tvc '{"rootWrappedTON":"'$ROOT_WTON_ADDR'"}' --wc 0 | grep "Transaction" | cut -c 12-) 
+RESULT_DEPLOY=$($TONOS_CLI -u $NETWORK deploy --abi ../$CONTRACTS/TONwrapper.abi.json --sign $CURRENT_DIR/WTON/deploy.keys.json ../$CONTRACTS/TONwrapper.tvc '{"rootWrappedTON":"'$ROOT_WTON_ADDR'"}' --wc 0 | grep "Transaction" | cut -c 12-) 
 echo Status Deploy: $RESULT_DEPLOY
 
 # $TONOS_CLI -u $NETWORK deploy --abi ./WTON/TONwrapper.abi.json --sign ./WTON/deploy.keys.json ./WTON/TONwrapper.tvc '{"rootWrappedTON":"'$ROOT_ADDR'"}' --wc 0 

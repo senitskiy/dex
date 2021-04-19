@@ -7,9 +7,9 @@ TONOS_CLI=$(./configes/get_tonos_cli.sh)
 CURRENT_DIR=$(./configes/get_current_dir.sh)
 
 echo ========================================================================
-echo Deploy Root for WTON
+echo Deploy root for WTON
 
-AMOUNT_TONS=6000000000
+# AMOUNT_TONS=6000000000
 # GIVER="0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94"
 CODE=$($TVM_LINKER decode --tvc ../$CONTRACTS/TONTokenWallet.tvc | grep code: | cut -c 8-)
 # CODE1=$($TVM_LINKER decode --tvc ../$CONTRACTS/TONTokenWallet.tvc > code1.txt) # | grep code: | cut -c 8-) #> code1.txt)
@@ -40,7 +40,7 @@ ROOT_OWNER_FILE="$CURRENT_DIR/WTON/address.json"
 ROOT_OWNER_COMPILE=$(cat $ROOT_OWNER_FILE | grep address | cut -c 17-80)
 # echo 11
 ROOT_OWNER=0x$ROOT_OWNER_COMPILE
-# echo ROOT_OWNER: $ROOT_OWNER
+ echo ROOT_OWNER: $ROOT_OWNER
 
 # ROOT_DATA='{"_name":"'$ROOT_NAME'","_symbol":"'$ROOT_SYMBOL'","_decimals":'$ROOT_DECIMALS',"_rootPublicKey":"0x'$ROOT_OWNER_PK'","_rootOwnerAddress":"'$ZERO_ADDRESS'","_code":"'$CODE'"}'
 
@@ -56,7 +56,7 @@ WTON_ADDR=$(cat $WTON_ADDR_FILE | grep address | cut -c 15-80)
 
 # echo $ROOT_WTON_ADDR
 
-ISROOT=$($TONOS_CLI -u $NETWORK call $WTON_ADDR isRoot "{\"arg0\":\"$ROOT_ADDR\"}" --abi ./WTON/TONwrapper.abi.json | grep "value0" | cut -c 12-)
+ISROOT=$($TONOS_CLI -u $NETWORK call $WTON_ADDR isRoot "{\"arg0\":\"$ROOT_ADDR\"}" --abi ../$CONTRACTS/TONwrapper.abi.json | grep "value0" | cut -c 12-)
 echo Address: $ROOT_ADDR is Root 
 echo For WrappedTON $WTON_ADDR is: $ISROOT
 
