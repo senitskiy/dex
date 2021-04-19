@@ -4,6 +4,10 @@ const { Account } = require("@tonclient/appkit");
 const { Contract } = require("./DEXpairContract.js");
 const fs = require('fs');
 const pathJson = './DEXpairBTCxUSDT.json';
+const networks = ["http://localhost",'net.ton.dev','main.ton.dev'];
+const hello = ["Hello localhost TON!","Hello devnet TON!","Hello maitnet TON!"];
+const networkSelector = 1;
+
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -29,7 +33,7 @@ console.log("Contract reacted to your getPair:", response.decoded.output);
 response = await clientAcc.runLocal("getBalanceTONgrams", {});
 console.log("Contract reacted to your getBalanceTONgrams:", response.decoded.output);
 
-const clientAddr = JSON.parse(fs.readFileSync('./DEXclientContract.json',{encoding: "utf8"})).address;
+const clientAddr = JSON.parse(fs.readFileSync('./DEXsetKeys.json',{encoding: "utf8"})).address;
 // Execute `getClient` get method  (execute the message locally on TVM)
 response = await clientAcc.runLocal("getClient", {dexclient:clientAddr});
 console.log("Contract reacted to your getClient:", response.decoded.output);
@@ -41,25 +45,17 @@ console.log("Contract reacted to your getClient:", response.decoded.output);
 }
 
 (async () => {
-  const client = new TonClient({
-    network: {
-      // Local TON OS SE instance URL here
-      endpoints: ["http://localhost"],
-    },
-  });
+  const client = new TonClient({network: { endpoints: [networks[networkSelector]],},});
   try {
-    console.log("Hello localhost TON!");
+    console.log(hello[networkSelector]);
     await main(client);
     process.exit(0);
   } catch (error) {
     if (error.code === 504) {
-      console.error(`
-        Network is inaccessible.
-        You have to start TON OS SE using \`tondev se start\`
-        `);
-      } else {
-        console.error(error);
-      }
+      console.error(`Network is inaccessible. Pls check connection`);
+    } else {
+      console.error(error);
     }
-    client.close();
-  })();
+  }
+  client.close();
+})();

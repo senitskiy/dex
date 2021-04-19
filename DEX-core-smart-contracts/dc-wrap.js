@@ -6,7 +6,11 @@ const { TTWContract } = require("./TONTokenWalletContract.js");
 const fs = require('fs');
 // const pathJson = './DEXclientContract.json';
 const pathJson = './DEXsetKeys.json';
+const networks = ["http://localhost",'net.ton.dev','main.ton.dev'];
+const hello = ["Hello localhost TON!","Hello devnet TON!","Hello maitnet TON!"];
+const networkSelector = 1;
 
+let ton = 10000000000;
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -44,13 +48,10 @@ async function main(client) {
   response = await walletAcc.runLocal("getBalance", {});
   console.log("Contract reacted to your getBalance:", response.decoded.output);
 
-  let ton = 30000000000000000;
-  let fee = 1399000;
-  let tonprovide = ton + fee;
 
-  const giver = await Account.getGiverForClient(client);
-  await giver.sendTo(contractAddr, 30_000_000_000_000_000);
-  console.log(`Grams were transferred from giver to ${contractAddr}`);
+  // const giver = await Account.getGiverForClient(client);
+  // await giver.sendTo(contractAddr, 30_000_000_000_000_000);
+  // console.log(`Grams were transferred from giver to ${contractAddr}`);
 
   // Execute `getBalanceTONgrams` get method  (execute the message locally on TVM)
   // response = await clientAcc.runLocal("getBalanceTONgrams", {});
@@ -60,6 +61,8 @@ async function main(client) {
   // response = await walletAcc.runLocal("getBalance", {});
   // console.log("Contract reacted to your getBalance:", response.decoded.output);
 
+  let fee = 1399000;
+  let tonprovide = ton + fee;
   // Call `wrapTON` function
   response = await clientAcc.run("wrapTON", {qtyTONgrams:tonprovide});
   console.log('Contract run wrapTON with output', response.decoded.output, response.transaction.id);
@@ -77,25 +80,17 @@ async function main(client) {
 }
 
 (async () => {
-  const client = new TonClient({
-    network: {
-      // Local TON OS SE instance URL here
-      endpoints: ["http://localhost"],
-    },
-  });
+  const client = new TonClient({network: { endpoints: [networks[networkSelector]],},});
   try {
-    console.log("Hello localhost TON!");
+    console.log(hello[networkSelector]);
     await main(client);
     process.exit(0);
   } catch (error) {
     if (error.code === 504) {
-      console.error(`
-        Network is inaccessible.
-        You have to start TON OS SE using \`tondev se start\`
-        `);
-      } else {
-        console.error(error);
-      }
+      console.error(`Network is inaccessible. Pls check connection`);
+    } else {
+      console.error(error);
     }
-    client.close();
-  })();
+  }
+  client.close();
+})();

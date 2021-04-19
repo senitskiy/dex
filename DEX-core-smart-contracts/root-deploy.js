@@ -2,8 +2,13 @@ const {TonClient, abiContract, signerKeys} = require("@tonclient/core");
 const { libNode } = require("@tonclient/lib-node");
 const { Account } = require("@tonclient/appkit");
 const { Contract } = require("./DEXrootContract.js");
+const { GiverContract } = require("./GiverContract.js");
 const fs = require('fs');
 const pathJson = './DEXrootContract.json';
+const networks = ["http://localhost",'net.ton.dev','main.ton.dev'];
+const hello = ["Hello localhost TON!","Hello devnet TON!","Hello maitnet TON!"];
+const networkSelector = 1;
+
 
 TonClient.useBinaryLibrary(libNode);
 
@@ -13,6 +18,7 @@ async function logEvents(params, response_type) {
 }
 
 async function main(client) {
+  let response;
   const contractKeys = signerKeys(await TonClient.default.crypto.generate_random_sign_keys());
   const clientAcc = new Account(Contract, {
     signer: contractKeys,
@@ -25,18 +31,28 @@ async function main(client) {
   console.log('wTONroot ',wTONroot);
   console.log('wTONwrapper ',wTONwrapper);
 
-  const giver = await Account.getGiverForClient(client);
-  await giver.sendTo(address, 100_000_000_000_000);
-  console.log(`Grams were transferred from giver to ${address}`);
 
-  let contractJson = JSON.stringify({address:address, keys:contractKeys});
-  fs.writeFileSync( pathJson, contractJson,{flag:'w'});
+  if (networkSelector == 0) {
+    const giver = await Account.getGiverForClient(client);
+    await giver.sendTo(address, 100_000_000_000);
+    console.log(`Grams were transferred from giver to ${address}`);
+  } else if (networkSelector == 1) {
+    const giverNTDAddress = JSON.parse(fs.readFileSync('./GiverContractNTD.json',{encoding: "utf8"})).address;;
+    const giverNTDKeys = JSON.parse(fs.readFileSync('./GiverContractNTD.json',{encoding: "utf8"})).keys;
+    const giverNTDAcc = new Account(GiverContract, {
+      address: giverNTDAddress,
+      signer: giverNTDKeys,
+      client,
+    });
+    // Call `sendTransaction` function
+    response = await giverNTDAcc.run("sendTransaction", {dest:address,value:20000000000,bounce:false});
+    console.log("Giver send 20 ton to address:", address, response.decoded.output);
+  } else if (networkSelector == 2){console.log('Pls set giver for main.ton.dev');} else {console.log('networkSelector is incorrect');}
+
+  const keyJson = JSON.stringify({address:address, keys:contractKeys});
+  fs.writeFileSync( pathJson, keyJson,{flag:'w'});
   console.log("Future address of the contract  and keys written successfully to:", pathJson);
 
-  // Request contract deployment funds form a local TON OS SE giver
-  // not suitable for other networks.
-  // await clientAcc.deploy({ useGiver: true });
-  // console.log(`DEXclient contract was deployed at address: ${address}`);
 
   const deployMessage = await client.abi.encode_message(await clientAcc.getParamsOfDeployMessage({
     initFunctionName:"constructor",
@@ -75,7 +91,7 @@ console.log(`Contract was deployed at address: ${address}`);
 
 
 // Call `setDEXclientCode` function
-let response = await clientAcc.run("setDEXclientCode", {code:Contract.codeDC});
+response = await clientAcc.run("setDEXclientCode", {code:Contract.codeDC});
 console.log("Contract reacted to your setDEXclientCode:", response.decoded.output);
 
 // Call `setDEXpairCode` function
@@ -96,25 +112,17 @@ console.log("Contract reacted to your setDEXpairCode:", response.decoded.output)
 }
 
 (async () => {
-  const client = new TonClient({
-    network: {
-      // Local TON OS SE instance URL here
-      endpoints: ["http://localhost"],
-    },
-  });
+  const client = new TonClient({network: { endpoints: [networks[networkSelector]],},});
   try {
-    console.log("Hello localhost TON!");
+    console.log(hello[networkSelector]);
     await main(client);
     process.exit(0);
   } catch (error) {
     if (error.code === 504) {
-      console.error(`
-        Network is inaccessible.
-        You have to start TON OS SE using \`tondev se start\`
-        `);
-      } else {
-        console.error(error);
-      }
+      console.error(`Network is inaccessible. Pls check connection`);
+    } else {
+      console.error(error);
     }
-    client.close();
-  })();
+  }
+  client.close();
+})();

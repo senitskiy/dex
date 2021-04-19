@@ -4,6 +4,10 @@ const { Contract } = require("./DEXclientContract.js");
 const { DPContract } = require("./DPContract.js");
 const { RContract } = require("./RootTokenContract.js");
 const hex2ascii = require('hex2ascii');
+const networks = ["http://localhost",'net.ton.dev','main.ton.dev'];
+const hello = ["Hello localhost TON!","Hello devnet TON!","Hello maitnet TON!"];
+const networkSelector = 1;
+
 
 
 const {
@@ -62,25 +66,17 @@ async function main(client) {
 }
 
 (async () => {
-  const client = new TonClient({
-    network: {
-      // Local TON OS SE instance URL here
-      endpoints: ["http://localhost"],
-    },
-  });
+  const client = new TonClient({network: { endpoints: [networks[networkSelector]],},});
   try {
-    console.log("Hello localhost TON!");
+    console.log(hello[networkSelector]);
     await main(client);
     process.exit(0);
   } catch (error) {
     if (error.code === 504) {
-      console.error(`
-        Network is inaccessible.
-        You have to start TON OS SE using \`tondev se start\`
-        `);
-      } else {
-        console.error(error);
-      }
+      console.error(`Network is inaccessible. Pls check connection`);
+    } else {
+      console.error(error);
     }
-    client.close();
-  })();
+  }
+  client.close();
+})();
